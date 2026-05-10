@@ -13,8 +13,7 @@ const restartButton = document.getElementById("restartButton");
 const countdownBox = document.getElementById("countdownBox");
 const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
-const GAME_VERSION = "1.0.4";
-const INTERSTITIAL_SECONDS = 3;
+const GAME_VERSION = "1.0.5";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
@@ -74,10 +73,6 @@ let introAudioBlocked = false;
 let introAwaitingAudioGesture = false;
 let shareButton = null;
 let shareStatus = null;
-let adModal = null;
-let adCloseButton = null;
-let adCountdownText = null;
-let adTimer = null;
 
 function formatTemp(value) {
   if (value >= 100) return Math.floor(value).toLocaleString("ja-JP");
@@ -119,32 +114,6 @@ function renderShareControls() {
   finishContent.appendChild(shareButton);
   finishContent.appendChild(shareStatus);
   shareButton.addEventListener("click", shareResultToX);
-}
-
-function renderInterstitialAd() {
-  if (adModal) return;
-
-  adModal = document.createElement("div");
-  adModal.id = "interstitialAd";
-  adModal.className = "ad-modal";
-  adModal.hidden = true;
-  adModal.innerHTML = `
-    <div class="ad-panel" role="dialog" aria-modal="true" aria-labelledby="adTitle">
-      <p class="ad-kicker">AD</p>
-      <h2 id="adTitle">THERMOMETER BOOST</h2>
-      <p class="ad-copy">NEXT FEVER IS LOADING</p>
-      <div class="ad-creative" aria-hidden="true">
-        <span class="ad-thermo"></span>
-        <span class="ad-burst ad-burst-a"></span>
-        <span class="ad-burst ad-burst-b"></span>
-      </div>
-      <button id="adCloseButton" type="button" disabled>WAIT <span id="adCountdownText">${INTERSTITIAL_SECONDS}</span></button>
-    </div>
-  `;
-  document.body.appendChild(adModal);
-  adCloseButton = document.getElementById("adCloseButton");
-  adCountdownText = document.getElementById("adCountdownText");
-  adCloseButton.addEventListener("click", closeInterstitialAdAndRestart);
 }
 
 function getStage(value) {
@@ -398,39 +367,6 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
-function showInterstitialAd() {
-  renderInterstitialAd();
-  if (adTimer) clearInterval(adTimer);
-
-  let remaining = INTERSTITIAL_SECONDS;
-  adCountdownText.textContent = remaining;
-  adCloseButton.disabled = true;
-  adCloseButton.innerHTML = `WAIT <span id="adCountdownText">${remaining}</span>`;
-  adCountdownText = document.getElementById("adCountdownText");
-  adModal.hidden = false;
-
-  adTimer = setInterval(() => {
-    remaining -= 1;
-    adCountdownText.textContent = remaining;
-
-    if (remaining <= 0) {
-      clearInterval(adTimer);
-      adTimer = null;
-      adCloseButton.disabled = false;
-      adCloseButton.textContent = "PLAY AGAIN";
-    }
-  }, 1000);
-}
-
-function closeInterstitialAdAndRestart() {
-  if (adTimer) {
-    clearInterval(adTimer);
-    adTimer = null;
-  }
-  adModal.hidden = true;
-  restart();
-}
-
 function restart() {
   clearIntroTimers();
   stopIntroVoices();
@@ -667,11 +603,10 @@ window.addEventListener("touchmove", blockPageTouch, { passive: false });
 window.addEventListener("gesturestart", blockPageTouch, { passive: false });
 window.addEventListener("gesturechange", blockPageTouch, { passive: false });
 window.addEventListener("blur", resetPointer);
-restartButton.addEventListener("click", showInterstitialAd);
+restartButton.addEventListener("click", restart);
 
 updateVisuals();
 renderVersionBadge();
 renderShareControls();
-renderInterstitialAd();
 runIntro();
 requestAnimationFrame(loop);
