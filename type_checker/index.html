@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI顔タイプ診断 Prototype</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #161616;
+      --muted: #666a70;
+      --line: #dedede;
+      --paper: #fbfaf7;
+      --panel: #ffffff;
+      --accent: #d84861;
+      --accent-2: #277e8e;
+      --soft: #f1ece4;
+      --shadow: 0 18px 48px rgba(32, 29, 25, 0.12);
+      font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(216, 72, 97, 0.11), transparent 34%),
+        linear-gradient(225deg, rgba(39, 126, 142, 0.1), transparent 36%),
+        var(--paper);
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app {
+      width: min(100%, 980px);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 20px clamp(16px, 4vw, 36px) 32px;
+      display: grid;
+      align-content: center;
+      gap: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand strong {
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .brand span,
+    .progress-text,
+    .hint,
+    .micro {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+      gap: clamp(18px, 5vw, 54px);
+      align-items: center;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(34px, 7vw, 68px);
+      line-height: 1.02;
+      letter-spacing: 0;
+      max-width: 8em;
+    }
+
+    h2 {
+      font-size: clamp(24px, 5vw, 38px);
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin-top: 18px;
+      max-width: 34em;
+      color: #3d3d3d;
+      font-size: clamp(15px, 2vw, 18px);
+      line-height: 1.85;
+    }
+
+    .choice-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .primary-btn,
+    .ghost-btn,
+    .gender-btn,
+    .face-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .gender-btn {
+      min-height: 74px;
+      padding: 18px;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+    }
+
+    .primary-btn,
+    .ghost-btn {
+      min-height: 46px;
+      padding: 0 16px;
+      font-weight: 700;
+    }
+
+    .primary-btn {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .ghost-btn {
+      background: transparent;
+    }
+
+    .gender-btn:hover,
+    .face-card:hover,
+    .ghost-btn:hover {
+      border-color: #9a9a9a;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .preview-stack {
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .sample-card {
+      width: min(86vw, 330px);
+      aspect-ratio: 4 / 5;
+      border-radius: 8px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      display: grid;
+      place-items: center;
+      transform: rotate(-2deg);
+    }
+
+    .sample-card:nth-child(2) {
+      position: absolute;
+      transform: translate(28px, 24px) rotate(4deg);
+      z-index: -1;
+      opacity: 0.78;
+    }
+
+    .question {
+      display: grid;
+      gap: 14px;
+    }
+
+    .progress {
+      height: 8px;
+      border-radius: 999px;
+      background: #e8e0d8;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 200ms ease;
+    }
+
+    .duel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(10px, 2.4vw, 18px);
+      align-items: stretch;
+      touch-action: pan-y;
+    }
+
+    .face-card {
+      min-width: 0;
+      padding: 8px;
+      display: block;
+      box-shadow: 0 10px 28px rgba(32, 29, 25, 0.08);
+    }
+
+    .portrait {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 6px;
+      background: var(--soft);
+      overflow: hidden;
+      display: block;
+      object-fit: cover;
+    }
+
+    .card-label {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .pick-mark {
+      flex: 0 0 auto;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      color: var(--accent);
+      font-weight: 900;
+    }
+
+    .result-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 420px) minmax(0, 1fr);
+      gap: clamp(18px, 5vw, 54px);
+      align-items: center;
+    }
+
+    .result-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: clamp(16px, 3vw, 24px);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 16px;
+    }
+
+    .result-title {
+      color: var(--accent);
+      font-size: clamp(28px, 5vw, 46px);
+      line-height: 1.08;
+      letter-spacing: 0;
+      font-weight: 900;
+    }
+
+    .result-copy {
+      color: #333;
+      line-height: 1.85;
+      font-size: 15px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      border: 1px solid #e6d5d9;
+      background: #fff3f5;
+      color: #823041;
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .bars {
+      display: grid;
+      gap: 9px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 7em 1fr 2.5em;
+      gap: 10px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .bar-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #ece7e0;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0;
+      background: var(--accent-2);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .toast {
+      min-height: 20px;
+      color: var(--accent-2);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 760px) {
+      .app {
+        align-content: start;
+      }
+
+      .hero,
+      .result-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-stack {
+        min-height: 310px;
+      }
+
+      .sample-card {
+        width: min(74vw, 260px);
+      }
+
+      .duel {
+        gap: 10px;
+      }
+
+      .face-card {
+        padding: 7px;
+      }
+
+      .card-label {
+        font-size: 12px;
+      }
+
+      .bar-row {
+        grid-template-columns: 6em 1fr 2.2em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div class="brand">
+        <strong>AI顔タイプ診断</strong>
+        <span>SNS向け診断プロトタイプ</span>
+      </div>
+      <div class="progress-text" id="topStatus">Prototype</div>
+    </div>
+
+    <section class="screen active" id="startScreen">
+      <div class="hero">
+        <div>
+          <h1>あなたが最も惹かれる顔</h1>
+          <p class="lead">2択を直感で選ぶだけ。好みの顔に含まれる特徴を重ねて、最後に「当たってる感」のあるタイプ名で返します。</p>
+          <div class="choice-row" aria-label="診断対象を選択">
+            <button class="gender-btn" data-gender="female">女性を診断</button>
+            <button class="gender-btn" data-gender="male">男性を診断</button>
+          </div>
+        </div>
+        <div class="preview-stack" aria-hidden="true">
+          <div class="sample-card" id="sampleA"></div>
+          <div class="sample-card" id="sampleB"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="quizScreen">
+      <div class="question">
+        <div>
+          <p class="micro" id="roundLabel">1 / 8</p>
+          <h2>どっちがタイプ？</h2>
+          <p class="hint">タップ、または横スワイプで選択</p>
+        </div>
+        <div class="progress" aria-hidden="true">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="duel" id="duel">
+          <button class="face-card" id="leftCard" aria-label="左の顔を選ぶ"></button>
+          <button class="face-card" id="rightCard" aria-label="右の顔を選ぶ"></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="resultScreen">
+      <div class="result-layout">
+        <div class="result-card">
+          <div id="resultPortrait"></div>
+          <div class="tags" id="resultTags"></div>
+        </div>
+        <div>
+          <p class="micro">診断結果</p>
+          <div class="result-title" id="resultTitle"></div>
+          <p class="result-copy" id="resultCopy"></p>
+          <div class="bars" id="resultBars"></div>
+          <div class="actions">
+            <button class="primary-btn" id="shareButton">結果をコピー</button>
+            <button class="ghost-btn" id="restartButton">もう一度</button>
+          </div>
+          <div class="toast" id="toast" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="data/male_faces.js"></script>
+  <script>
+    const TAGS = {
+      cool: "クール",
+      cute: "かわいい",
+      tsurime: "つり目",
+      tareme: "たれ目",
+      adult: "大人っぽい",
+      idol: "アイドル感",
+      mysterious: "アンニュイ",
+      shortFace: "中顔面短め",
+      soft: "やわらかい",
+      sharp: "シャープ"
+    };
+
+    const femaleFaces = [
+      { id: "f01", label: "涼しげな切れ長タイプ", palette: ["#f2d7c8", "#2c2c34", "#a9425a"], tags: { cool: .9, tsurime: .9, adult: .7, mysterious: .6, sharp: .8 } },
+      { id: "f02", label: "甘めアイドルタイプ", palette: ["#f4cbbd", "#5a382f", "#d95f76"], tags: { cute: .9, idol: .9, tareme: .7, shortFace: .7, soft: .8 } },
+      { id: "f03", label: "透明感アンニュイタイプ", palette: ["#ead7cc", "#3e4652", "#b45e66"], tags: { mysterious: .95, soft: .7, adult: .5, tareme: .5, cool: .4 } },
+      { id: "f04", label: "華やかお姉さんタイプ", palette: ["#eec1ae", "#382b31", "#c7475f"], tags: { adult: .95, cool: .55, sharp: .65, tsurime: .45, idol: .35 } },
+      { id: "f05", label: "小動物っぽい愛嬌タイプ", palette: ["#f1c6b5", "#4f332b", "#e16877"], tags: { cute: .95, shortFace: .9, tareme: .85, soft: .9, idol: .45 } },
+      { id: "f06", label: "モードな美人タイプ", palette: ["#dfb7a9", "#17191f", "#8f3448"], tags: { cool: .95, sharp: .95, adult: .85, mysterious: .55, tsurime: .65 } }
+    ];
+
+    const maleFaces = [
+      { id: "m01", label: "塩顔クールタイプ", palette: ["#e7c4b2", "#2e3036", "#9b4e48"], tags: { cool: .95, sharp: .8, mysterious: .65, adult: .45, tsurime: .55 } },
+      { id: "m02", label: "犬系アイドルタイプ", palette: ["#efc7b5", "#4e352d", "#bf6156"], tags: { cute: .85, idol: .9, tareme: .8, soft: .8, shortFace: .45 } },
+      { id: "m03", label: "色気アンニュイタイプ", palette: ["#d8ad9f", "#27242a", "#834549"], tags: { mysterious: .95, adult: .9, cool: .55, sharp: .45, tareme: .35 } },
+      { id: "m04", label: "王道ハンサムタイプ", palette: ["#e2b7a7", "#2c2727", "#aa4d4c"], tags: { adult: .8, idol: .65, sharp: .7, tsurime: .55, cool: .55 } },
+      { id: "m05", label: "やわらか年下タイプ", palette: ["#efc9bb", "#5a4237", "#bd6a60"], tags: { cute: .8, soft: .95, shortFace: .65, tareme: .75, idol: .45 } },
+      { id: "m06", label: "ミステリアス美形タイプ", palette: ["#d9b0a4", "#16191e", "#7f3d4c"], tags: { mysterious: .9, cool: .85, sharp: .85, tsurime: .8, adult: .65 } }
+    ];
+
+    const state = {
+      gender: null,
+      round: 0,
+      faces: [],
+      rounds: [],
+      preference: {},
+      lastResult: ""
+    };
+
+    const startScreen = document.querySelector("#startScreen");
+    const quizScreen = document.querySelector("#quizScreen");
+    const resultScreen = document.querySelector("#resultScreen");
+    const topStatus = document.querySelector("#topStatus");
+    const roundLabel = document.querySelector("#roundLabel");
+    const progressBar = document.querySelector("#progressBar");
+    const leftCard = document.querySelector("#leftCard");
+    const rightCard = document.querySelector("#rightCard");
+    const duel = document.querySelector("#duel");
+    const resultPortrait = document.querySelector("#resultPortrait");
+    const resultTags = document.querySelector("#resultTags");
+    const resultTitle = document.querySelector("#resultTitle");
+    const resultCopy = document.querySelector("#resultCopy");
+    const resultBars = document.querySelector("#resultBars");
+    const toast = document.querySelector("#toast");
+
+    function faceSvg(face, variant = 0, score = {}) {
+      const [skin, hair, lip] = face.palette;
+      const eyeTilt = (face.tags.tsurime || score.tsurime || 0) - (face.tags.tareme || score.tareme || 0);
+      const eyeY = 44 + ((face.tags.shortFace || score.shortFace || 0) * 4);
+      const mouthCurve = (face.tags.cute || score.cute || 0) > .65 ? "M42 72 Q50 78 58 72" : "M42 73 Q50 75 58 73";
+      const jaw = (face.tags.sharp || score.sharp || 0) > .7 ? "78 72 67 96 50 106 33 96 22 72" : "78 72 68 94 50 102 32 94 22 72";
+      const hairPath = variant % 2
+        ? "M18 51 C18 20 38 9 55 14 C75 18 84 36 79 62 C74 51 66 42 55 37 C42 45 30 42 18 51Z"
+        : "M17 57 C14 30 31 12 51 12 C73 12 87 30 82 58 C73 42 62 35 51 35 C37 35 27 43 17 57Z";
+      const brow = eyeTilt > 0 ? ["M34 41 L45 38", "M56 38 L67 41"] : ["M34 39 L45 42", "M56 42 L67 39"];
+
+      return `
+        <svg class="portrait" viewBox="0 0 100 125" role="img" aria-label="${face.label}">
+          <rect width="100" height="125" fill="#f4efe8"/>
+          <circle cx="18" cy="18" r="16" fill="${lip}" opacity=".12"/>
+          <circle cx="84" cy="104" r="22" fill="#277e8e" opacity=".10"/>
+          <path d="${hairPath}" fill="${hair}"/>
+          <polygon points="${jaw}" fill="${skin}"/>
+          <path d="M25 56 C22 73 30 91 50 99 C70 91 78 73 75 56" fill="${skin}"/>
+          <path d="${brow[0]}" stroke="${hair}" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="${brow[1]}" stroke="${hair}" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M32 ${eyeY} Q39 ${eyeY - eyeTilt * 3} 46 ${eyeY}" stroke="#1d1d1d" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+          <path d="M54 ${eyeY} Q61 ${eyeY - eyeTilt * 3} 68 ${eyeY}" stroke="#1d1d1d" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+          <path d="M50 54 Q47 64 51 66" stroke="#b98274" stroke-width="1.9" fill="none" stroke-linecap="round"/>
+          <path d="${mouthCurve}" stroke="${lip}" stroke-width="2.3" fill="none" stroke-linecap="round"/>
+          <path d="M30 24 C43 31 60 28 72 20" stroke="#fff" stroke-width="3" opacity=".24" fill="none"/>
+        </svg>
+      `;
+    }
+
+    function renderPortrait(face, variant = 0, score = {}) {
+      if (face.image) {
+        return `<img class="portrait" src="${face.image}" alt="">`;
+      }
+
+      return faceSvg(face, variant, score);
+    }
+
+    function renderCard(el, face, side) {
+      el.innerHTML = `
+        ${renderPortrait(face, side === "left" ? 0 : 1)}
+      `;
+    }
+
+    function show(screen) {
+      [startScreen, quizScreen, resultScreen].forEach(el => el.classList.remove("active"));
+      screen.classList.add("active");
+    }
+
+    function buildRounds(faces) {
+      if (faces.length > 6) {
+        const shuffled = [...faces].sort(() => Math.random() - 0.5);
+        const rounds = [];
+        for (let i = 0; i < shuffled.length - 1; i += 2) {
+          rounds.push([shuffled[i], shuffled[i + 1]]);
+        }
+        return rounds;
+      }
+
+      return [
+        [faces[0], faces[1]],
+        [faces[2], faces[3]],
+        [faces[4], faces[5]],
+        [faces[0], faces[2]],
+        [faces[1], faces[4]],
+        [faces[3], faces[5]],
+        [faces[0], faces[4]],
+        [faces[2], faces[5]]
+      ];
+    }
+
+    function start(gender) {
+      state.gender = gender;
+      state.round = 0;
+      state.preference = Object.fromEntries(Object.keys(TAGS).map(key => [key, 0]));
+      const maleAssetFaces = Array.isArray(window.MALE_FACE_ASSETS) ? window.MALE_FACE_ASSETS : maleFaces;
+      state.faces = gender === "female" ? femaleFaces : maleAssetFaces;
+      state.rounds = buildRounds(state.faces);
+      topStatus.textContent = gender === "female" ? "女性を診断中" : "男性を診断中";
+      show(quizScreen);
+      renderRound();
+    }
+
+    function renderRound() {
+      const pair = state.rounds[state.round];
+      roundLabel.textContent = `${state.round + 1} / ${state.rounds.length}`;
+      progressBar.style.width = `${(state.round / state.rounds.length) * 100}%`;
+      renderCard(leftCard, pair[0], "left");
+      renderCard(rightCard, pair[1], "right");
+    }
+
+    function choose(index) {
+      const selected = state.rounds[state.round][index];
+      Object.entries(selected.tags).forEach(([key, value]) => {
+        state.preference[key] = (state.preference[key] || 0) + value;
+      });
+      state.round += 1;
+
+      if (state.round >= state.rounds.length) {
+        progressBar.style.width = "100%";
+        renderResult();
+        return;
+      }
+
+      renderRound();
+    }
+
+    function sortedScores() {
+      return Object.entries(state.preference)
+        .sort((a, b) => b[1] - a[1])
+        .map(([key, value]) => ({ key, label: TAGS[key], value }));
+    }
+
+    function resultName(keys) {
+      const top = new Set(keys.slice(0, 3));
+      if (top.has("cool") && top.has("sharp")) return "静かな目力に吸い込まれるタイプ";
+      if (top.has("cute") && top.has("shortFace")) return "守りたくなる甘めフェイス";
+      if (top.has("mysterious") && top.has("adult")) return "余白で惹きつけるアンニュイ美形";
+      if (top.has("idol") && top.has("tareme")) return "近づきやすい王道アイドル顔";
+      if (top.has("tsurime")) return "凛としたつり目フェイス";
+      return "清潔感のある好印象フェイス";
+    }
+
+    function bestResultFace() {
+      return state.faces
+        .map(face => ({
+          face,
+          score: Object.keys(TAGS).reduce((sum, key) => {
+            return sum + ((state.preference[key] || 0) * (face.tags[key] || 0));
+          }, 0)
+        }))
+        .sort((a, b) => b.score - a.score)[0].face;
+    }
+
+    function renderResult() {
+      const scores = sortedScores();
+      const topKeys = scores.slice(0, 4).map(item => item.key);
+      const title = resultName(topKeys);
+      const max = Math.max(...scores.map(item => item.value), 1);
+      const base = bestResultFace();
+
+      resultTitle.textContent = title;
+      resultCopy.textContent = `${TAGS[topKeys[0]]}と${TAGS[topKeys[1]]}の反応が強め。ぱっと見の華やかさより、目元や雰囲気に「自分だけが良さをわかっている」感を見つけると刺さる傾向です。`;
+      resultPortrait.innerHTML = renderPortrait(base, 2, state.preference);
+      resultTags.innerHTML = scores.slice(0, 5).map(item => `<span class="tag">#${item.label}好き</span>`).join("");
+      resultBars.innerHTML = scores.slice(0, 6).map(item => `
+        <div class="bar-row">
+          <span>${item.label}</span>
+          <span class="bar-track"><span class="bar-fill" style="width:${Math.round((item.value / max) * 100)}%"></span></span>
+          <span>${item.value.toFixed(1)}</span>
+        </div>
+      `).join("");
+
+      state.lastResult = `AI顔タイプ診断の結果: ${title}\n${scores.slice(0, 4).map(item => `#${item.label}好き`).join(" ")}`;
+      topStatus.textContent = "診断完了";
+      show(resultScreen);
+    }
+
+    function reset() {
+      topStatus.textContent = "Prototype";
+      toast.textContent = "";
+      show(startScreen);
+    }
+
+    async function copyResult() {
+      try {
+        await navigator.clipboard.writeText(state.lastResult);
+        toast.textContent = "共有テキストをコピーしました";
+      } catch {
+        toast.textContent = state.lastResult;
+      }
+    }
+
+    document.querySelectorAll("[data-gender]").forEach(button => {
+      button.addEventListener("click", () => start(button.dataset.gender));
+    });
+    leftCard.addEventListener("click", () => choose(0));
+    rightCard.addEventListener("click", () => choose(1));
+    document.querySelector("#restartButton").addEventListener("click", reset);
+    document.querySelector("#shareButton").addEventListener("click", copyResult);
+
+    let touchStartX = 0;
+    duel.addEventListener("touchstart", event => {
+      touchStartX = event.changedTouches[0].clientX;
+    }, { passive: true });
+    duel.addEventListener("touchend", event => {
+      const delta = event.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(delta) > 48) choose(delta < 0 ? 1 : 0);
+    }, { passive: true });
+
+    document.addEventListener("keydown", event => {
+      if (!quizScreen.classList.contains("active")) return;
+      if (event.key === "ArrowLeft") choose(0);
+      if (event.key === "ArrowRight") choose(1);
+    });
+
+    document.querySelector("#sampleA").innerHTML = faceSvg(femaleFaces[0]);
+    document.querySelector("#sampleB").innerHTML = faceSvg(femaleFaces[1], 1);
+  </script>
+</body>
+</html>

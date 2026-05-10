@@ -1,0 +1,1879 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>文字迷路の赤ずきん 10x10</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #2b241f;
+      --muted: #6d6258;
+      --cream: #fff7e8;
+      --paper: rgba(255, 249, 237, .92);
+      --wall: #3b312b;
+      --maze-wall-size: 2px;
+      --maze-outer-wall-size: 3px;
+      --tile: #fff0d3;
+      --seen: #ffd3c8;
+      --now: #ef9b96;
+      --red: #d83d48;
+      --green: #3d7d58;
+      --blue: #86c7e8;
+      --gold: #f1b83f;
+      font-family: "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(241, 184, 63, .28) 0 88px, transparent 90px),
+        linear-gradient(180deg, #f8f1e4 0, #eef6e9 52%, #fbf0e3 100%);
+      display: grid;
+      grid-template-rows: minmax(0, 1fr);
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      min-height: 0;
+      height: 100%;
+      display: grid;
+      grid-template-columns: minmax(430px, .84fr) minmax(560px, 1.16fr);
+      grid-template-rows: minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px;
+      background:
+        linear-gradient(90deg, rgba(255, 244, 226, .82), rgba(232, 246, 226, .78)),
+        radial-gradient(circle at 24% 15%, rgba(255,255,255,.75) 0 120px, transparent 122px);
+      overscroll-behavior: none;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .ad-footer {
+      padding: 0 16px 12px;
+      background:
+        linear-gradient(90deg, rgba(255, 244, 226, .82), rgba(232, 246, 226, .78)),
+        linear-gradient(180deg, rgba(255,255,255,0), rgba(255, 247, 232, .68));
+    }
+
+    .ad-slot {
+      display: grid;
+      place-items: center;
+      width: min(100%, 970px);
+      height: clamp(50px, 8vh, 82px);
+      min-height: 0;
+      margin: 0 auto;
+      border: 1px dashed rgba(59,49,43,.24);
+      border-radius: 10px;
+      color: rgba(77, 66, 55, .68);
+      background: rgba(255, 250, 240, .78);
+      box-shadow: 0 8px 22px rgba(62, 43, 26, .08);
+      font-size: .82rem;
+      font-weight: 800;
+    }
+
+    .stage-shell {
+      position: relative;
+      grid-column: 2;
+      min-width: 0;
+      overflow: hidden;
+      min-height: 0;
+      height: 100%;
+      border: 1px solid rgba(59,49,43,.18);
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 12% 14%, rgba(255, 217, 92, .88) 0 38px, transparent 39px),
+        linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,255,255,0) 38%);
+      box-shadow: 0 12px 34px rgba(62, 43, 26, .12);
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .stage-caption {
+      position: absolute;
+      z-index: 5;
+      left: 50%;
+      bottom: 12px;
+      width: min(680px, calc(100% - 24px));
+      transform: translateX(-50%);
+      display: grid;
+      gap: 2px;
+      padding: 8px 11px;
+      border: 1px solid rgba(59,49,43,.16);
+      border-radius: 12px;
+      background: rgba(255, 253, 247, .68);
+      backdrop-filter: blur(6px);
+      box-shadow: 0 8px 24px rgba(59,49,43,.1);
+    }
+
+    .stage-title {
+      font-size: clamp(.92rem, 1.85vw, 1.22rem);
+      font-weight: 900;
+      line-height: 1.28;
+    }
+
+    .stage-text {
+      color: var(--muted);
+      font-size: clamp(.54rem, 1.08vw, .88rem);
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+    }
+
+    .stage-title ruby,
+    .stage-text ruby {
+      ruby-align: center;
+      ruby-position: over;
+    }
+
+    .stage-title rt,
+    .stage-text rt {
+      color: rgba(73, 61, 51, .74);
+      font-size: .5em;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .image-stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      perspective: 900px;
+      background: url("assets/scene/background-horizontal-path-v1.png") center / cover no-repeat;
+    }
+
+    .sky-dot {
+      position: absolute;
+      left: 8%;
+      top: 8%;
+      width: 74px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #ffd95f;
+      box-shadow: 0 0 40px rgba(255, 217, 95, .42);
+    }
+
+    .cloud-strip,
+    .far-forest,
+    .ground-strip,
+    .grass-strip {
+      position: absolute;
+      left: 0;
+      width: 200%;
+      display: flex;
+      will-change: transform;
+    }
+
+    .cloud-strip {
+      top: 12%;
+      height: 86px;
+      animation: scrollLayer 34s linear infinite;
+    }
+
+    .far-forest {
+      bottom: 28%;
+      height: 170px;
+      animation: scrollLayer 18s linear infinite;
+    }
+
+    .ground-strip {
+      bottom: 0;
+      height: 34%;
+      animation: scrollLayer 8s linear infinite;
+    }
+
+    .grass-strip {
+      bottom: 3%;
+      height: 64px;
+      animation: scrollLayer 3.6s linear infinite;
+    }
+
+    .cloud-panel,
+    .forest-panel,
+    .ground-panel,
+    .grass-panel {
+      position: relative;
+      flex: 0 0 50%;
+      height: 100%;
+    }
+
+    .cloud {
+      position: absolute;
+      width: 140px;
+      height: 44px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+      box-shadow:
+        34px -14px 0 4px rgba(255,255,255,.92),
+        76px -2px 0 8px rgba(255,255,255,.92);
+    }
+
+    .cloud.one { left: 8%; top: 26px; }
+    .cloud.two { left: 48%; top: 8px; transform: scale(.82); }
+    .cloud.three { left: 78%; top: 34px; transform: scale(1.05); }
+
+    .forest-panel::before,
+    .forest-panel::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 100%;
+      background-repeat: repeat-x;
+      background-size: 180px 170px;
+    }
+
+    .forest-panel::before {
+      opacity: .75;
+      background-image:
+        linear-gradient(135deg, transparent 0 43%, #377a55 43% 57%, transparent 57%),
+        linear-gradient(45deg, transparent 0 43%, #2f6d4d 43% 57%, transparent 57%),
+        linear-gradient(90deg, transparent 0 48%, #765239 48% 52%, transparent 52%);
+      background-position: 0 0, 0 0, 0 58px;
+    }
+
+    .forest-panel::after {
+      opacity: .92;
+      background-size: 136px 142px;
+      background-image:
+        linear-gradient(135deg, transparent 0 43%, #2f704f 43% 57%, transparent 57%),
+        linear-gradient(45deg, transparent 0 43%, #286446 43% 57%, transparent 57%),
+        linear-gradient(90deg, transparent 0 47%, #6e4c34 47% 53%, transparent 53%);
+      background-position: 44px 28px, 44px 28px, 44px 72px;
+    }
+
+    .ground-panel {
+      background:
+        radial-gradient(circle at 18% 28%, rgba(255,255,255,.2) 0 12px, transparent 13px),
+        radial-gradient(circle at 62% 42%, rgba(255,255,255,.16) 0 10px, transparent 11px),
+        linear-gradient(180deg, #9bd37d, #72b65f);
+    }
+
+    .grass-panel {
+      background-repeat: repeat-x;
+      background-size: 92px 64px;
+      background-image:
+        linear-gradient(70deg, transparent 0 44%, #3e8b55 44% 50%, transparent 50%),
+        linear-gradient(110deg, transparent 0 48%, #4a9a5e 48% 54%, transparent 54%),
+        linear-gradient(86deg, transparent 0 50%, #327d4b 50% 56%, transparent 56%);
+    }
+
+    .walk-hero {
+      position: absolute;
+      z-index: 3;
+      left: 50%;
+      bottom: 13%;
+      width: clamp(142px, 20vw, 236px);
+      height: clamp(213px, 30vw, 354px);
+      object-fit: contain;
+      object-position: center bottom;
+      transform: translateX(-50%);
+      transform-origin: 50% 92%;
+      animation: heroPendulum .34s ease-in-out infinite alternate;
+      filter: drop-shadow(0 12px 8px rgba(43,36,31,.22));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .walk-hero.reaction-hero {
+      animation: none;
+      width: clamp(142px, 20vw, 236px);
+      height: clamp(213px, 30vw, 354px);
+    }
+
+    .scene-object {
+      position: absolute;
+      z-index: 2;
+      left: 67%;
+      bottom: 16%;
+      width: clamp(88px, 13vw, 150px);
+      height: clamp(88px, 13vw, 150px);
+      transform: translateX(-50%);
+      animation: objectPop 1.4s ease-in-out infinite;
+    }
+
+    .route-slot {
+      position: absolute;
+      z-index: 3;
+      left: 0;
+      right: 0;
+      top: 14px;
+      bottom: 13%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .route-art {
+      display: block;
+      width: auto;
+      max-width: calc(100% - 36px);
+      height: clamp(213px, 30vw, 354px);
+      max-height: 100%;
+      object-fit: contain;
+      object-position: center bottom;
+      transform-origin: 50% 82%;
+      animation: routeSway 2.4s ease-in-out infinite;
+      filter: drop-shadow(0 16px 10px rgba(43,36,31,.18));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .route-art.float {
+      animation: routeFloat 2.1s ease-in-out infinite;
+    }
+
+    .route-art.sway {
+      animation: routeSway 2.4s ease-in-out infinite;
+    }
+
+    .route-slot.fly {
+      bottom: 30%;
+    }
+
+    .route-art.fly {
+      height: clamp(184px, 26vw, 318px);
+      transform-origin: 50% 72%;
+      animation: routeSkyLoop 3.6s ease-in-out infinite;
+    }
+
+    .route-slot.cloud-ride {
+      bottom: 28%;
+    }
+
+    .route-art.cloud-ride {
+      height: clamp(190px, 27vw, 330px);
+      transform-origin: 50% 74%;
+      animation: routeCloudBob 3s ease-in-out infinite;
+    }
+
+    .route-slot.spin {
+      bottom: 15%;
+    }
+
+    .route-art.spin {
+      transform-origin: 50% 58%;
+      transform-style: preserve-3d;
+      backface-visibility: visible;
+      animation: routeTurnOnce 1.25s cubic-bezier(.25, .9, .24, 1) both;
+    }
+
+    .route-art.wide {
+      height: clamp(260px, 36vw, 430px);
+    }
+
+    .scene-object.flower {
+      z-index: 4;
+      bottom: 13%;
+      width: clamp(71px, 10vw, 118px);
+      height: clamp(107px, 15vw, 177px);
+      background: url("assets/scene/stickers/flower-selected-01.png") center bottom / contain no-repeat;
+      animation: flowerBloom .9s ease-out both;
+      filter: drop-shadow(0 10px 7px rgba(43,36,31,.18));
+    }
+
+    .scene-object.flower::before,
+    .scene-object.flower::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 26%;
+      width: 11px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: rgba(255, 229, 110, .92);
+      box-shadow:
+        -36px 10px 0 -3px rgba(255, 229, 110, .78),
+        34px -6px 0 -4px rgba(255, 229, 110, .82),
+        18px 34px 0 -5px rgba(255, 229, 110, .72);
+      transform: translateX(-50%);
+      animation: flowerSpark .95s ease-out both;
+    }
+
+    .scene-object.flower::after {
+      animation-delay: .32s;
+      transform: translateX(-50%) rotate(35deg);
+      opacity: .7;
+    }
+
+    .scene-object.cat {
+      border-radius: 50% 50% 44% 44%;
+      background:
+        radial-gradient(circle at 38% 38%, #222 0 3%, transparent 4%),
+        radial-gradient(circle at 62% 38%, #222 0 3%, transparent 4%),
+        radial-gradient(circle at 50% 50%, #7b4c2d 0 4%, transparent 5%),
+        linear-gradient(135deg, #f0b15b 0 28%, transparent 29%),
+        linear-gradient(225deg, #f0b15b 0 28%, transparent 29%),
+        #f0b15b;
+    }
+
+    .scene-object.house {
+      width: clamp(136px, 19vw, 230px);
+      height: clamp(124px, 17vw, 210px);
+      background:
+        linear-gradient(135deg, transparent 0 34%, #c6533e 35% 50%, transparent 51%),
+        linear-gradient(45deg, transparent 0 34%, #c6533e 35% 50%, transparent 51%),
+        linear-gradient(90deg, transparent 0 41%, #8b6540 41% 58%, transparent 58%),
+        linear-gradient(#ffe1a6, #f5c985);
+      border: 4px solid rgba(139,101,64,.75);
+      border-radius: 8px;
+      animation-duration: 2.2s;
+    }
+
+    .scene-object.note {
+      color: #634fa3;
+      font-size: clamp(4rem, 9vw, 8rem);
+      font-weight: 900;
+      display: grid;
+      place-items: center;
+    }
+
+    .scene-object.letter {
+      width: clamp(100px, 15vw, 170px);
+      height: clamp(64px, 9vw, 104px);
+      border: 4px solid #8b6540;
+      border-radius: 8px;
+      background:
+        linear-gradient(34deg, transparent 0 47%, #8b6540 48% 51%, transparent 52%),
+        linear-gradient(146deg, transparent 0 47%, #8b6540 48% 51%, transparent 52%),
+      #fff7df;
+      animation-name: letterFloat;
+    }
+
+    .scene-object.nap {
+      width: clamp(124px, 17vw, 210px);
+      height: clamp(74px, 10vw, 124px);
+      border-radius: 52% 48% 46% 54%;
+      background:
+        radial-gradient(circle at 30% 34%, rgba(255,255,255,.76) 0 12%, transparent 13%),
+        radial-gradient(circle at 58% 46%, rgba(255,255,255,.54) 0 10%, transparent 11%),
+        linear-gradient(180deg, #bfe08d, #78b95f);
+      border: 3px solid rgba(70, 119, 61, .42);
+      animation-duration: 2.1s;
+    }
+
+    .scene-object.nap::after {
+      content: "Zzz";
+      position: absolute;
+      right: -18%;
+      top: -42%;
+      color: #6e62a8;
+      font-weight: 900;
+      font-size: clamp(1.25rem, 2.6vw, 2rem);
+      text-shadow: 0 2px 0 rgba(255,255,255,.72);
+      animation: wordFloat 1.8s ease-in-out infinite;
+    }
+
+    .scene-object.flying-hat {
+      left: 68%;
+      bottom: 40%;
+      width: clamp(118px, 16vw, 196px);
+      height: clamp(76px, 10vw, 128px);
+      border-radius: 50% 50% 46% 46%;
+      background:
+        radial-gradient(ellipse at 50% 18%, #d64b38 0 34%, transparent 35%),
+        radial-gradient(ellipse at 50% 72%, #efc76f 0 54%, transparent 55%);
+      border: 4px solid rgba(111, 66, 42, .48);
+      box-shadow: 0 12px 0 -6px rgba(111, 66, 42, .25);
+      animation: hatFloat 1.7s ease-in-out infinite;
+    }
+
+    .scene-object.flying-hat::after {
+      content: "";
+      position: absolute;
+      right: 8%;
+      top: -28%;
+      width: 42%;
+      height: 44%;
+      border-radius: 999px 999px 999px 0;
+      background: rgba(255,255,255,.8);
+      box-shadow: -42px 18px 0 -8px rgba(255,255,255,.72);
+    }
+
+    .scene-object.cloud-ride {
+      left: 68%;
+      bottom: 25%;
+      width: clamp(136px, 18vw, 226px);
+      height: clamp(78px, 10vw, 132px);
+      border-radius: 999px;
+      background: rgba(255,255,255,.94);
+      box-shadow:
+        -42px 14px 0 -4px rgba(255,255,255,.88),
+        42px 8px 0 2px rgba(255,255,255,.82),
+        0 18px 10px rgba(90, 111, 120, .16);
+      border: 3px solid rgba(128, 151, 158, .28);
+      animation: cloudBob 2s ease-in-out infinite;
+    }
+
+    .scene-object.mushroom-dance {
+      left: 68%;
+      bottom: 16%;
+      width: clamp(148px, 19vw, 246px);
+      height: clamp(120px, 15vw, 198px);
+      background:
+        radial-gradient(circle at 27% 24%, #fff4d7 0 7%, transparent 8%),
+        radial-gradient(circle at 47% 18%, #fff4d7 0 6%, transparent 7%),
+        radial-gradient(circle at 66% 28%, #fff4d7 0 7%, transparent 8%),
+        radial-gradient(ellipse at 48% 35%, #d34b3d 0 39%, transparent 40%),
+        linear-gradient(90deg, transparent 0 33%, #ffe6b8 34% 62%, transparent 63%);
+      border-bottom: 4px solid rgba(122, 83, 55, .32);
+      border-radius: 44% 46% 30% 30%;
+      animation: mushroomTwirl 1.1s ease-in-out infinite;
+    }
+
+    .scene-object.mushroom-dance::before,
+    .scene-object.mushroom-dance::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      width: 28%;
+      height: 16%;
+      border-radius: 999px;
+      background: #7b4f32;
+      transform-origin: 50% 50%;
+      animation: footTap .55s ease-in-out infinite alternate;
+    }
+
+    .scene-object.mushroom-dance::before {
+      left: 28%;
+      transform: rotate(14deg);
+    }
+
+    .scene-object.mushroom-dance::after {
+      right: 24%;
+      animation-delay: .18s;
+      transform: rotate(-14deg);
+    }
+
+    .scene-object.pudding-seat {
+      left: 67%;
+      bottom: 13%;
+      width: clamp(146px, 19vw, 246px);
+      height: clamp(110px, 14vw, 184px);
+      border-radius: 44% 44% 34% 34%;
+      background:
+        radial-gradient(ellipse at 50% 16%, #8f552e 0 24%, transparent 25%),
+        linear-gradient(180deg, #ffe08a 0 18%, #f6bf58 19% 72%, #d58a42 73% 100%);
+      border: 4px solid rgba(135, 82, 44, .42);
+      box-shadow: inset 0 14px 18px rgba(255,255,255,.38);
+      animation: puddingWobble 1.15s ease-in-out infinite;
+    }
+
+    .scene-object.pudding-seat::after {
+      content: "♪";
+      position: absolute;
+      right: -18%;
+      top: -34%;
+      color: #c35a86;
+      font-weight: 900;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      text-shadow: 0 2px 0 rgba(255,255,255,.8);
+      animation: wordFloat 1.5s ease-in-out infinite;
+    }
+
+    .scene-word {
+      display: none;
+    }
+
+    .drifting-trees {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 28%;
+      z-index: 0;
+      height: 42%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .tree-sprite {
+      position: absolute;
+      left: 100%;
+      bottom: var(--tree-bottom, 0%);
+      width: clamp(112px, 11vw, 176px);
+      height: auto;
+      max-height: 100%;
+      opacity: .74;
+      transform: translateX(0);
+      animation: treeDrift 26s linear infinite;
+      animation-delay: var(--tree-delay, 0s);
+      filter:
+        blur(.65px)
+        drop-shadow(0 12px 7px rgba(43,36,31,.11));
+      will-change: transform;
+    }
+
+    .tree-sprite:nth-child(odd) { --tree-bottom: -4%; }
+    .tree-sprite:nth-child(even) { --tree-bottom: 2%; }
+
+    .drifting-grass {
+      position: absolute;
+      inset: auto 0 0;
+      z-index: 4;
+      height: 15%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .grass-sprite {
+      position: absolute;
+      left: 100%;
+      bottom: var(--grass-bottom, 0);
+      width: var(--grass-width, 120px);
+      height: auto;
+      opacity: var(--grass-opacity, .9);
+      transform: translateX(0);
+      animation: grassDrift var(--grass-speed, 9s) linear infinite;
+      animation-delay: var(--grass-delay, 0s);
+      filter:
+        blur(var(--grass-blur, 0))
+        drop-shadow(0 8px 5px rgba(43,36,31,.12));
+      will-change: transform;
+    }
+
+    .grass-sprite.back {
+      z-index: 1;
+      --grass-bottom: 4%;
+      --grass-width: clamp(46px, 4.8vw, 70px);
+      --grass-speed: 15.7s;
+      --grass-blur: .2px;
+      --grass-opacity: .72;
+    }
+
+    .grass-sprite.mid {
+      z-index: 2;
+      --grass-bottom: -8%;
+      --grass-width: clamp(58px, 6.2vw, 96px);
+      --grass-speed: 12.1s;
+      --grass-blur: .7px;
+      --grass-opacity: .82;
+    }
+
+    .grass-sprite.front {
+      z-index: 3;
+      --grass-bottom: -24%;
+      --grass-width: clamp(92px, 9.5vw, 152px);
+      --grass-speed: 8.9s;
+      --grass-blur: 2.2px;
+      --grass-opacity: .8;
+    }
+
+    .stage-shell.paused .cloud-strip,
+    .stage-shell.paused .far-forest,
+    .stage-shell.paused .ground-strip,
+    .stage-shell.paused .grass-strip,
+    .stage-shell.paused .tree-sprite,
+    .stage-shell.paused .grass-sprite {
+      animation-play-state: paused;
+    }
+
+    .stage-shell.walking .cloud-strip,
+    .stage-shell.walking .far-forest,
+    .stage-shell.walking .ground-strip,
+    .stage-shell.walking .grass-strip {
+      animation-play-state: running;
+    }
+
+    .cloud { animation: none; }
+    .wrong-mode .stage-shell { background: linear-gradient(180deg, #c7d0ff 0 44%, #acd590 44% 100%); }
+    .wrong-mode .image-stage { background: url("assets/scene/background-horizontal-path-v1.png") center / cover no-repeat; }
+
+    .play {
+      position: relative;
+      z-index: 6;
+      grid-column: 1;
+      grid-row: 1;
+      min-width: 0;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr);
+      gap: clamp(6px, 1.2vh, 12px);
+      width: 100%;
+      min-height: 0;
+      height: 100%;
+      margin: 0;
+      padding: clamp(8px, 1.4vh, 14px);
+      background: rgba(255, 249, 237, .93);
+      border: 1px solid rgba(59,49,43,.18);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 34px rgba(62, 43, 26, .12);
+    }
+
+    .maze-pad {
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      padding: 4px;
+      overflow: hidden;
+    }
+
+    .touch-pad {
+      position: absolute;
+      z-index: 10;
+      left: 50%;
+      top: 67%;
+      display: none;
+      width: clamp(118px, 34vw, 164px);
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(214, 144, 132, .46);
+      border-radius: 50%;
+      background:
+        conic-gradient(from 45deg, rgba(255, 218, 210, .18), rgba(255, 247, 232, .30), rgba(255, 218, 210, .18), rgba(255, 247, 232, .30), rgba(255, 218, 210, .18));
+      box-shadow:
+        inset 0 0 0 4px rgba(255, 250, 241, .34),
+        inset 0 0 0 9px rgba(214, 144, 132, .10);
+      pointer-events: auto;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pad-button {
+      position: absolute;
+      width: 32%;
+      height: 32%;
+      border: 0;
+      padding: 0;
+      border-radius: 50%;
+      background: rgba(255, 244, 232, .14);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      appearance: none;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pad-button:active {
+      background: rgba(255, 232, 224, .30);
+    }
+
+    .pad-button::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 0;
+      height: 0;
+      transform: translate(-50%, -50%);
+      opacity: .94;
+    }
+
+    .pad-button.up { left: 50%; top: 22%; }
+    .pad-button.right { left: 78%; top: 50%; }
+    .pad-button.down { left: 50%; top: 78%; }
+    .pad-button.left { left: 22%; top: 50%; }
+
+    .pad-button.up::before {
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 24px solid rgba(220, 112, 136, .82);
+    }
+
+    .pad-button.right::before {
+      border-top: 15px solid transparent;
+      border-bottom: 15px solid transparent;
+      border-left: 24px solid rgba(220, 112, 136, .82);
+    }
+
+    .pad-button.down::before {
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 24px solid rgba(220, 112, 136, .82);
+    }
+
+    .pad-button.left::before {
+      border-top: 15px solid transparent;
+      border-bottom: 15px solid transparent;
+      border-right: 24px solid rgba(220, 112, 136, .82);
+    }
+
+    .maze {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      grid-template-rows: repeat(10, minmax(0, 1fr));
+      width: min(100%, 560px, calc(100vh - 300px));
+      max-height: 100%;
+      aspect-ratio: 1;
+      min-width: 0;
+      background: var(--tile);
+      border: var(--maze-outer-wall-size) solid var(--wall);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 10px 28px rgba(58,40,23,.17);
+    }
+
+    .cell {
+      position: relative;
+      display: grid;
+      place-items: center;
+      --cell-fill: var(--tile);
+      min-width: 0;
+      min-height: 0;
+      aspect-ratio: 1;
+      border: 0;
+      background: var(--cell-fill);
+      font-weight: 800;
+      font-size: clamp(.92rem, 2.05vw, 1.3rem);
+      line-height: 1;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .maze-wall-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .maze-wall {
+      position: absolute;
+      background: var(--wall);
+      pointer-events: none;
+    }
+
+    .maze-wall.vertical {
+      width: var(--maze-wall-size);
+      transform: translateX(-50%);
+    }
+
+    .maze-wall.horizontal {
+      height: var(--maze-wall-size);
+      transform: translateY(-50%);
+    }
+
+    .maze-result-actions {
+      position: absolute;
+      z-index: 14;
+      left: 50%;
+      top: 6%;
+      display: none;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      width: min(88%, 430px);
+      padding: 8px;
+      transform: translateX(-50%);
+      border: 1px solid rgba(126, 82, 54, .22);
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(255, 250, 232, .96), rgba(246, 224, 188, .94));
+      box-shadow:
+        0 12px 24px rgba(72, 47, 28, .18),
+        inset 0 0 0 2px rgba(255,255,255,.34);
+      pointer-events: auto;
+    }
+
+    .maze-result-actions.show {
+      display: flex;
+      animation: resultTrayIn .46s ease-out;
+    }
+
+    .maze-result-actions.good {
+      width: min(94%, 480px);
+    }
+
+    .maze-result-actions:not(.good) {
+      width: auto;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .result-button {
+      min-width: 0;
+      min-height: 38px;
+      border: 1px solid rgba(124, 82, 55, .22);
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: rgba(255, 248, 233, .96);
+      color: #62432d;
+      font: inherit;
+      font-size: clamp(.72rem, 1.55vw, .92rem);
+      font-weight: 800;
+      line-height: 1.15;
+      box-shadow: 0 5px 12px rgba(95, 62, 36, .13);
+      cursor: pointer;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      touch-action: manipulation;
+    }
+
+    .maze-result-actions.good .result-button {
+      flex: 1 1 0;
+    }
+
+    .result-button.restart,
+    .maze-result-actions.good .result-button.next {
+      min-height: 72px;
+      padding: 16px 28px;
+      font-size: clamp(1rem, 2.35vw, 1.28rem);
+      box-shadow: 0 9px 18px rgba(95, 62, 36, .16);
+    }
+
+    .result-button.restart {
+      width: min(78vw, 294px);
+    }
+
+    .maze-result-actions.good .result-button.restart {
+      flex: 1 1 0;
+      width: auto;
+    }
+
+    .result-button.next {
+      background: linear-gradient(180deg, #fff2cf, #f2c87f);
+      color: #6b3f20;
+    }
+
+    .result-button:active {
+      transform: translateY(1px);
+      box-shadow: 0 3px 8px rgba(95, 62, 36, .14);
+    }
+
+    .cell::before {
+      content: "";
+      position: absolute;
+      inset: 13%;
+      border-radius: 6px;
+      background: rgba(255,255,255,.36);
+      transform: rotate(-5deg);
+    }
+
+    .cell span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .cell.visited { --cell-fill: var(--seen); }
+    .cell.current {
+      --cell-fill: var(--now);
+      animation: cellPop .24s ease-out;
+    }
+
+    .cell.current::after {
+      content: "";
+      position: absolute;
+      z-index: 2;
+      left: 50%;
+      top: 50%;
+      width: 32%;
+      height: 38%;
+      border-radius: 50% 50% 42% 42%;
+      background:
+        radial-gradient(circle at 50% 35%, #ffd7b1 0 17%, transparent 18%),
+        radial-gradient(circle at 40% 35%, #2b241f 0 2.8%, transparent 3.3%),
+        radial-gradient(circle at 60% 35%, #2b241f 0 2.8%, transparent 3.3%),
+        linear-gradient(180deg, #d83d48 0 54%, #ea5961 55% 100%);
+      border: 2px solid #9e2630;
+      opacity: .78;
+      box-shadow: 0 2px 0 rgba(59,49,43,.16), 0 0 0 3px rgba(216, 61, 72, .1);
+      transform: translate(-50%, -50%);
+      animation: miniWalk .72s ease-in-out infinite;
+    }
+
+    .cell.current span {
+      z-index: 4;
+      transform: none;
+      padding: 0 2px;
+      border-radius: 6px;
+      background: rgba(255, 250, 239, .74);
+      text-shadow: 0 1px 0 #fff;
+    }
+
+    .cell.ending { --cell-fill: #dff1c9; }
+    .cell.good-result { --cell-fill: #ffe28b; }
+    .cell.bad-result { --cell-fill: var(--tile); }
+
+    .cell.bad-result::before {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      left: 50%;
+      top: 50%;
+      width: 44%;
+      height: 24%;
+      border-left: clamp(5px, .8vw, 8px) solid rgba(218, 92, 98, .36);
+      border-bottom: clamp(5px, .8vw, 8px) solid rgba(218, 92, 98, .36);
+      border-radius: 6px;
+      background: transparent;
+      transform: translate(-50%, -60%) rotate(-42deg);
+    }
+
+    .cell.bad-result.current::after {
+      display: none;
+    }
+
+    @keyframes cellPop {
+      0% { transform: scale(.92); }
+      70% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes miniWalk {
+      0%, 100% { transform: translate(-50%, -50%) rotate(-1.5deg); }
+      50% { transform: translate(-50%, -52%) rotate(1.5deg); }
+    }
+
+    @keyframes scrollLayer {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    @keyframes objectPop {
+      0%, 100% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
+      50% { transform: translateX(-50%) translateY(-16px) rotate(3deg); }
+    }
+
+    @keyframes routeSway {
+      0%, 100% { transform: translateY(0) rotate(-1.8deg); }
+      50% { transform: translateY(-5px) rotate(1.8deg); }
+    }
+
+    @keyframes routeFloat {
+      0%, 100% { transform: translateY(0) rotate(-.6deg); }
+      50% { transform: translateY(-22px) rotate(.6deg); }
+    }
+
+    @keyframes routeSkyLoop {
+      0%, 100% { transform: translate(0, 0) rotate(-7deg) scale(.98); }
+      25% { transform: translate(86px, -42px) rotate(7deg) scale(1.02); }
+      50% { transform: translate(8px, -78px) rotate(1deg) scale(.96); }
+      75% { transform: translate(-86px, -36px) rotate(-8deg) scale(1.01); }
+    }
+
+    @keyframes routeCloudBob {
+      0%, 100% { transform: translate(0, 0) rotate(-.7deg); }
+      33% { transform: translate(-18px, -22px) rotate(.5deg); }
+      66% { transform: translate(18px, -34px) rotate(.8deg); }
+    }
+
+    @keyframes routeTurnOnce {
+      0% { transform: translateY(0) rotateY(0deg) rotate(-1deg); }
+      45% { transform: translateY(-7px) rotateY(190deg) rotate(1deg); }
+      100% { transform: translateY(0) rotateY(360deg) rotate(0deg); }
+    }
+
+    @keyframes flowerBloom {
+      0% { transform: translateX(-50%) translateY(10px) scale(.72); opacity: 0; }
+      24% { transform: translateX(-50%) translateY(-6px) scale(1.08); opacity: 1; }
+      52% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+    }
+
+    @keyframes flowerSpark {
+      0%, 18% { opacity: 0; transform: translateX(-50%) scale(.45); }
+      38% { opacity: .95; transform: translateX(-50%) scale(1); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-18px) scale(.75); }
+    }
+
+    @keyframes letterFloat {
+      0%, 100% { transform: translateX(-50%) translate(0, 0) rotate(-7deg); }
+      50% { transform: translateX(-50%) translate(42px, -34px) rotate(6deg); }
+    }
+
+    @keyframes wordFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes resultTrayIn {
+      from { opacity: 0; transform: translate(-50%, -8px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    @keyframes grassDrift {
+      from { transform: translateX(0); }
+      to { transform: translateX(calc(-100vw - 260px)); }
+    }
+
+    @keyframes treeDrift {
+      from { transform: translateX(0); }
+      to { transform: translateX(calc(-100vw - 320px)); }
+    }
+
+    @keyframes heroPendulum {
+      0% { transform: translateX(-50%) translateY(0) rotate(-1.8deg); }
+      100% { transform: translateX(-50%) translateY(-4px) rotate(1.8deg); }
+    }
+
+    @keyframes hatFloat {
+      0%, 100% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+      50% { transform: translateX(-50%) translateY(-18px) rotate(7deg); }
+    }
+
+    @keyframes cloudBob {
+      0%, 100% { transform: translateX(-50%) translateY(0) scale(1); }
+      50% { transform: translateX(-50%) translateY(-12px) scale(1.04); }
+    }
+
+    @keyframes mushroomTwirl {
+      0%, 100% { transform: translateX(-50%) rotate(-5deg); }
+      50% { transform: translateX(-50%) translateY(-10px) rotate(7deg); }
+    }
+
+    @keyframes footTap {
+      0% { translate: 0 0; }
+      100% { translate: 0 -8px; }
+    }
+
+    @keyframes puddingWobble {
+      0%, 100% { transform: translateX(-50%) scale(1, 1); }
+      30% { transform: translateX(-50%) scale(1.06, .94); }
+      60% { transform: translateX(-50%) scale(.96, 1.05); }
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, .5fr) minmax(0, .5fr);
+        grid-template-areas:
+          "stage"
+          "maze";
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .stage-shell {
+        grid-area: stage;
+        grid-column: 1;
+        grid-row: 1;
+        min-height: 0;
+      }
+
+      .play {
+        grid-area: maze;
+        grid-column: 1;
+        grid-row: 2;
+        min-height: 0;
+      }
+
+      .maze {
+        width: min(100%, max(160px, calc(100vh - 360px)));
+      }
+    }
+
+    @media (max-width: 740px) {
+      .app {
+        grid-template-rows: minmax(0, .44fr) minmax(0, .56fr);
+        gap: 8px;
+        padding: 8px;
+      }
+      .ad-footer { padding: 0 8px 8px; }
+      .ad-slot { height: clamp(44px, 7vh, 64px); }
+      .play {
+        gap: 6px;
+        padding: 7px;
+      }
+      .stage-caption {
+        bottom: 8px;
+        padding: 7px 9px;
+      }
+      .maze { width: min(calc(100vw - 64px), max(130px, calc(100vh - 370px))); }
+      .cell {
+        font-size: clamp(.72rem, 4.5vw, 1.05rem);
+        font-weight: 700;
+      }
+
+      @keyframes routeSkyLoop {
+        0%, 100% { transform: translate(0, 0) rotate(-7deg) scale(.98); }
+        25% { transform: translate(36px, -32px) rotate(7deg) scale(1.02); }
+        50% { transform: translate(4px, -52px) rotate(1deg) scale(.96); }
+        75% { transform: translate(-36px, -28px) rotate(-8deg) scale(1.01); }
+      }
+
+      @keyframes routeCloudBob {
+        0%, 100% { transform: translate(0, 0) rotate(-.7deg); }
+        33% { transform: translate(-10px, -18px) rotate(.5deg); }
+        66% { transform: translate(10px, -26px) rotate(.8deg); }
+      }
+    }
+
+    @media (max-width: 740px) and (orientation: portrait) {
+      .touch-pad {
+        display: block;
+      }
+    }
+
+    @media (max-width: 980px) and (max-height: 620px) {
+      .app {
+        grid-template-rows: minmax(0, .38fr) minmax(0, .62fr);
+        gap: 6px;
+        padding: 6px;
+      }
+      .ad-footer { padding: 0 6px 6px; }
+      .ad-slot { height: clamp(36px, 6vh, 50px); }
+      .stage-caption {
+        gap: 1px;
+        padding: 5px 7px;
+        bottom: 6px;
+      }
+      .drifting-trees {
+        bottom: 25%;
+        height: 48%;
+      }
+      .tree-sprite {
+        width: clamp(82px, 18vw, 118px);
+      }
+      .route-art {
+        max-height: calc(100% - 18px);
+      }
+      .stage-title {
+        font-size: .82rem;
+        line-height: 1.2;
+      }
+      .stage-text {
+        font-size: .72rem;
+        line-height: 1.28;
+      }
+      .play {
+        gap: 5px;
+        padding: 6px;
+      }
+      .maze { width: min(100%, max(80px, calc(100vh - 310px))); }
+      .cell {
+        font-size: clamp(.62rem, 3.7vw, .92rem);
+        font-weight: 700;
+      }
+      .touch-pad {
+        width: clamp(96px, 28vw, 128px);
+        top: 66%;
+      }
+      .pad-button.up::before {
+        border-left-width: 12px;
+        border-right-width: 12px;
+        border-bottom-width: 19px;
+      }
+      .pad-button.right::before {
+        border-top-width: 12px;
+        border-bottom-width: 12px;
+        border-left-width: 19px;
+      }
+      .pad-button.down::before {
+        border-left-width: 12px;
+        border-right-width: 12px;
+        border-top-width: 19px;
+      }
+      .pad-button.left::before {
+        border-top-width: 12px;
+        border-bottom-width: 12px;
+        border-right-width: 19px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" id="app">
+    <section class="stage-shell" aria-label="物語アニメーション">
+      <div id="stage" class="image-stage" role="img" aria-label="赤ずきんのアニメーション"></div>
+      <div class="stage-caption">
+        <div class="stage-title" id="stageTitle">森の入口</div>
+        <div class="stage-text" id="stageText"><ruby>方向<rt>ほうこう</rt></ruby>ボタンで<ruby>進<rt>すす</rt></ruby>み、<ruby>赤<rt>あか</rt></ruby>ずきんを<ruby>正解<rt>せいかい</rt></ruby>のルートに<ruby>導<rt>みちび</rt></ruby>きましょう</div>
+      </div>
+    </section>
+
+    <section class="play" aria-label="文字迷路">
+      <div class="maze-pad">
+        <div class="maze" id="maze" aria-live="polite"></div>
+      </div>
+      <div class="touch-pad" aria-label="移動用操作盤">
+        <button class="pad-button up" data-move="0,-1" aria-label="上へ"></button>
+        <button class="pad-button right" data-move="1,0" aria-label="右へ"></button>
+        <button class="pad-button down" data-move="0,1" aria-label="下へ"></button>
+        <button class="pad-button left" data-move="-1,0" aria-label="左へ"></button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="ad-footer" aria-label="広告">
+    <div class="ad-slot" id="adSlot">広告</div>
+  </footer>
+
+  <script>
+    const cols = 10;
+    const rows = 10;
+    const start = key(0, 5);
+
+    const trunk = [[0,5],[1,5],[2,5],[3,5],[4,5],[5,5],[5,6],[6,6],[6,5],[7,5]].map(toKey);
+    const routeA = [[1,4],[0,4],[0,3],[1,3],[1,2],[0,2],[0,1],[1,1],[1,0],[0,0]].map(toKey);
+    const routeB = [[2,4],[3,4],[4,4],[4,3],[3,3],[2,3],[2,2],[3,2],[4,2],[4,1],[4,0],[3,0],[2,0],[2,1],[3,1]].map(toKey);
+    const routeC = [[5,4],[6,4],[6,3],[5,3],[5,2],[6,2],[6,1],[5,1],[5,0],[6,0]].map(toKey);
+    const routeD = [[7,4],[8,4],[9,4],[9,3],[8,3],[7,3],[7,2],[8,2],[9,2],[9,1],[9,0],[8,0],[7,0],[7,1],[8,1]].map(toKey);
+    const routeE = [[0,6],[1,6],[2,6],[2,7],[1,7],[0,7],[0,8],[0,9],[1,9],[2,9],[2,8],[1,8]].map(toKey);
+    const routeF = [[3,6],[4,6],[4,7],[3,7],[3,8],[4,8],[4,9],[3,9]].map(toKey);
+    const routeG = [[7,6],[7,7],[6,7],[5,7],[5,8],[6,8],[7,8],[8,8],[8,9],[7,9],[6,9],[5,9]].map(toKey);
+    const routeH = [[8,5],[9,5],[9,6],[8,6],[8,7],[9,7],[9,8],[9,9]].map(toKey);
+
+    const labels = new Map();
+    writeText(trunk, "あかずきんはきょうも");
+    writeText([...trunk.slice(0, 2), ...routeA], "あかいはながみちでさいた");
+    writeText([...trunk.slice(0, 3), ...routeB], "あかずきんはそらとぶぼうしにのったよ");
+    writeText([...trunk.slice(0, 6), ...routeC], "あかずきんはくもにのってわらうよ");
+    writeText([...trunk, ...routeD], "あかずきんはきょうもきのこたちといっしょにおどった");
+    writeText([trunk[0], ...routeE], "あまいぱいをみんなでたべた");
+    writeText([...trunk.slice(0, 4), ...routeF], "あかずきんがうたをうたう");
+    writeText([...trunk.slice(0, 8), ...routeG], "あかずきんはきょだいなぷりんにすわったよ");
+    writeText([...trunk, ...routeH], "あかずきんはきょうもおばあさんにあう");
+
+    const graph = new Map();
+    for (let y = 0; y < rows; y += 1) {
+      for (let x = 0; x < cols; x += 1) graph.set(key(x, y), new Set());
+    }
+    connect(trunk);
+    connect([key(1, 5), ...routeA]);
+    connect([key(2, 5), ...routeB]);
+    connect([key(5, 5), ...routeC]);
+    connect([key(7, 5), ...routeD]);
+    connect([key(0, 5), ...routeE]);
+    connect([key(3, 5), ...routeF]);
+    connect([key(6, 6), ...routeG]);
+    connect([key(7, 5), ...routeH]);
+
+    const endings = new Map([
+      [last(routeA), { type: "flower", good: false, title: "あかい花の道", text: "赤い花が道に咲き、赤ずきんは見とれて足を止めました。" }],
+      [last(routeB), { type: "flyingHat", good: false, title: "空飛ぶぼうし", text: "ふわりと浮いた大きなぼうしに乗って、赤ずきんは森の上をひと回りしました。" }],
+      [last(routeC), { type: "cloudRide", good: false, title: "雲のふかふか便", text: "白い雲が迎えにきて、赤ずきんはふかふかの背中でくすっと笑いました。" }],
+      [last(routeD), { type: "mushroomDance", good: false, title: "きのこの輪おどり", text: "赤ずきんはきのこたちの輪に入り、くるくる楽しく踊りました。" }],
+      [last(routeE), { type: "pie", good: false, title: "甘いパイの会", text: "甘いパイの香りに誘われ、森のみんなでおやつ会が始まりました。" }],
+      [last(routeF), { type: "song", good: false, title: "歌う赤ずきん", text: "赤ずきんは小さな舞台で歌い、森の木々が手拍子しました。" }],
+      [last(routeG), { type: "puddingSeat", good: false, title: "大きなプリン", text: "ぷるぷるの大きなプリンが現れて、赤ずきんはそっと腰かけて笑いました。" }],
+      [last(routeH), { type: "home", good: true, title: "おばあさんに会う", text: "赤ずきんは今日もおばあさんに会いに、森の道をたどっていきました。" }]
+    ]);
+
+    const app = document.querySelector("#app");
+    const stageShell = document.querySelector(".stage-shell");
+    const stage = document.querySelector("#stage");
+    const maze = document.querySelector("#maze");
+    const stageTitle = document.querySelector("#stageTitle");
+    const stageText = document.querySelector("#stageText");
+    const cells = new Map();
+    let resultActions = null;
+    const walkFrames = ["assets/red-walk/sticker/red-riding-hood-walk-sticker.png"];
+    const preloadImages = [
+      ...walkFrames,
+      "assets/scene/A.png",
+      "assets/scene/B.png",
+      "assets/scene/C.png",
+      "assets/scene/D.png",
+      "assets/scene/E.png",
+      "assets/scene/F.png",
+      "assets/scene/G.png",
+      "assets/scene/H.png",
+      "assets/scene/background-horizontal-path-v1.png",
+      "assets/scene/stickers/tree-selected-06.png",
+      "assets/scene/stickers/grass-selected-06.png"
+    ];
+    const rubyTerms = [
+      ["赤い", "<ruby>赤<rt>あか</rt></ruby>い"],
+      ["白い", "<ruby>白<rt>しろ</rt></ruby>い"],
+      ["甘い", "<ruby>甘<rt>あま</rt></ruby>い"],
+      ["大きな", "<ruby>大<rt>おお</rt></ruby>きな"],
+      ["小さな", "<ruby>小<rt>ちい</rt></ruby>さな"],
+      ["空飛ぶ", "<ruby>空<rt>そら</rt></ruby><ruby>飛<rt>と</rt></ruby>ぶ"],
+      ["ひと回り", "ひと<ruby>回<rt>まわ</rt></ruby>り"],
+      ["赤ずきん", "<ruby>赤<rt>あか</rt></ruby>ずきん"],
+      ["方向", "<ruby>方向<rt>ほうこう</rt></ruby>"],
+      ["正解", "<ruby>正解<rt>せいかい</rt></ruby>"],
+      ["導き", "<ruby>導<rt>みちび</rt></ruby>き"],
+      ["見とれて", "<ruby>見<rt>み</rt></ruby>とれて"],
+      ["止めました", "<ruby>止<rt>と</rt></ruby>めました"],
+      ["浮いた", "<ruby>浮<rt>う</rt></ruby>いた"],
+      ["乗って", "<ruby>乗<rt>の</rt></ruby>って"],
+      ["迎えに", "<ruby>迎<rt>むか</rt></ruby>えに"],
+      ["背中", "<ruby>背<rt>せ</rt></ruby><ruby>中<rt>なか</rt></ruby>"],
+      ["笑いました", "<ruby>笑<rt>わら</rt></ruby>いました"],
+      ["入り", "<ruby>入<rt>はい</rt></ruby>り"],
+      ["楽しく", "<ruby>楽<rt>たの</rt></ruby>しく"],
+      ["踊りました", "<ruby>踊<rt>おど</rt></ruby>りました"],
+      ["香り", "<ruby>香<rt>かお</rt></ruby>り"],
+      ["誘われ", "<ruby>誘<rt>さそ</rt></ruby>われ"],
+      ["始まりました", "<ruby>始<rt>はじ</rt></ruby>まりました"],
+      ["舞台", "<ruby>舞<rt>ぶ</rt></ruby><ruby>台<rt>たい</rt></ruby>"],
+      ["歌い", "<ruby>歌<rt>うた</rt></ruby>い"],
+      ["木々", "<ruby>木々<rt>きぎ</rt></ruby>"],
+      ["手拍子", "<ruby>手<rt>て</rt></ruby><ruby>拍子<rt>びょうし</rt></ruby>"],
+      ["現れて", "<ruby>現<rt>あらわ</rt></ruby>れて"],
+      ["腰かけて", "<ruby>腰<rt>こし</rt></ruby>かけて"],
+      ["今日", "<ruby>今日<rt>きょう</rt></ruby>"],
+      ["会い", "<ruby>会<rt>あ</rt></ruby>い"],
+      ["歩いて", "<ruby>歩<rt>ある</rt></ruby>いて"],
+      ["矢印", "<ruby>矢<rt>や</rt></ruby><ruby>印<rt>じるし</rt></ruby>"],
+      ["進み", "<ruby>進<rt>すす</rt></ruby>み"],
+      ["一文", "<ruby>一<rt>いち</rt></ruby><ruby>文<rt>ぶん</rt></ruby>"],
+      ["完成", "<ruby>完<rt>かん</rt></ruby><ruby>成<rt>せい</rt></ruby>"],
+      ["入口", "<ruby>入<rt>いり</rt></ruby><ruby>口<rt>ぐち</rt></ruby>"],
+      ["花", "<ruby>花<rt>はな</rt></ruby>"],
+      ["道", "<ruby>道<rt>みち</rt></ruby>"],
+      ["咲き", "<ruby>咲<rt>さ</rt></ruby>き"],
+      ["足", "<ruby>足<rt>あし</rt></ruby>"],
+      ["森", "<ruby>森<rt>もり</rt></ruby>"],
+      ["上", "<ruby>上<rt>うえ</rt></ruby>"],
+      ["雲", "<ruby>雲<rt>くも</rt></ruby>"],
+      ["便", "<ruby>便<rt>びん</rt></ruby>"],
+      ["輪", "<ruby>輪<rt>わ</rt></ruby>"],
+      ["会う", "<ruby>会<rt>あ</rt></ruby>う"],
+      ["会", "<ruby>会<rt>かい</rt></ruby>"],
+      ["歌", "<ruby>歌<rt>うた</rt></ruby>"]
+    ].sort((a, b) => b[0].length - a[0].length);
+    let current = start;
+    let path = [start];
+    let locked = false;
+    let walkFrame = 0;
+    let audioCtx = null;
+    let bgmAudio = null;
+    const bgmVolume = 0.01;
+    const seVolumeScale = 1.35;
+    let resultActionTimer = null;
+
+    validateMaze();
+    warmSceneImages();
+    buildMaze();
+    renderCaption("森の入口", "方向ボタンで進み、赤ずきんを正解のルートに導きましょう");
+    renderScene("ready");
+    renderMaze();
+
+    document.querySelectorAll("[data-move]").forEach((button) => {
+      button.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        startAudio();
+        const [dx, dy] = button.dataset.move.split(",").map(Number);
+        move(dx, dy);
+      });
+    });
+    window.addEventListener("keydown", (event) => {
+      const moves = {
+        ArrowUp: [0, -1], w: [0, -1],
+        ArrowDown: [0, 1], s: [0, 1],
+        ArrowLeft: [-1, 0], a: [-1, 0],
+        ArrowRight: [1, 0], d: [1, 0]
+      };
+      if (!moves[event.key]) return;
+      event.preventDefault();
+      startAudio();
+      move(...moves[event.key]);
+    });
+
+    function buildMaze() {
+      maze.innerHTML = "";
+      for (let y = 0; y < rows; y += 1) {
+        for (let x = 0; x < cols; x += 1) {
+          const id = key(x, y);
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          cell.innerHTML = `<span>${labels.get(id)}</span>`;
+          if (endings.has(id)) cell.classList.add("ending");
+          maze.append(cell);
+          cells.set(id, cell);
+        }
+      }
+      renderMazeWalls();
+      ensureResultActions();
+    }
+
+    function warmSceneImages() {
+      preloadImages.forEach((src) => {
+        const image = new Image();
+        image.decoding = "async";
+        image.loading = "eager";
+        image.src = src;
+        if (image.decode) image.decode().catch(() => {});
+      });
+    }
+
+    function ensureResultActions() {
+      resultActions = document.createElement("div");
+      resultActions.className = "maze-result-actions";
+      resultActions.setAttribute("aria-live", "polite");
+      resultActions.innerHTML = `
+        <button class="result-button restart" type="button">はじめにもどる</button>
+        <button class="result-button next" type="button">つぎへ</button>
+      `;
+      resultActions.querySelector(".next").hidden = true;
+      resultActions.querySelector(".restart").addEventListener("click", (event) => {
+        event.preventDefault();
+        startAudio();
+        reset();
+      });
+      resultActions.querySelector(".next").addEventListener("click", (event) => {
+        event.preventDefault();
+        startAudio();
+        reset();
+      });
+      maze.append(resultActions);
+    }
+
+    function renderMazeWalls() {
+      const layer = document.createElement("div");
+      layer.className = "maze-wall-layer";
+
+      for (let y = 0; y < rows; y += 1) {
+        for (let x = 0; x < cols; x += 1) {
+          const open = graph.get(key(x, y));
+          if (x < cols - 1 && !open.has(key(x + 1, y))) {
+            layer.append(createMazeWall("vertical", (x + 1) * 100 / cols, y * 100 / rows, null, 100 / rows));
+          }
+          if (y < rows - 1 && !open.has(key(x, y + 1))) {
+            layer.append(createMazeWall("horizontal", x * 100 / cols, (y + 1) * 100 / rows, 100 / cols, null));
+          }
+        }
+      }
+      maze.append(layer);
+    }
+
+    function createMazeWall(type, left, top, width, height) {
+      const wall = document.createElement("div");
+      wall.className = `maze-wall ${type}`;
+      wall.style.left = `${left}%`;
+      wall.style.top = `${top}%`;
+      if (width !== null) wall.style.width = `${width}%`;
+      if (height !== null) wall.style.height = `${height}%`;
+      return wall;
+    }
+
+    function move(dx, dy) {
+      if (locked) return;
+      const [x, y] = current.split(",").map(Number);
+      const next = key(x + dx, y + dy);
+      if (!graph.get(current).has(next) || path.includes(next)) {
+        playBumpSound();
+        cells.get(current).animate([
+          { transform: "translateX(0)" },
+          { transform: "translateX(-5px)" },
+          { transform: "translateX(5px)" },
+          { transform: "translateX(0)" }
+        ], { duration: 170, easing: "ease-out" });
+        return;
+      }
+      current = next;
+      path = [...path, next];
+      playStepSound();
+      renderMaze();
+      if (endings.has(current)) finish(endings.get(current));
+    }
+
+    function renderMaze() {
+      for (const [id, cell] of cells) {
+        cell.classList.toggle("visited", path.includes(id));
+        cell.classList.toggle("current", id === current);
+      }
+    }
+
+    function finish(ending) {
+      locked = true;
+      const driftSnapshot = captureDriftPositions();
+      app.classList.toggle("wrong-mode", !ending.good);
+      renderCaption(ending.title, ending.text);
+      renderScene(ending.type);
+      freezeDriftPositions(driftSnapshot);
+      stageShell.classList.add("paused");
+      playFinishSound(ending);
+      cells.get(current).classList.add(ending.good ? "good-result" : "bad-result");
+      if (ending.good) {
+        showResultActions(true);
+      } else {
+        clearResultActionTimer();
+        resultActionTimer = window.setTimeout(() => showResultActions(false), 2000);
+      }
+    }
+
+    function showResultActions(isGood) {
+      if (!resultActions) return;
+      const nextButton = resultActions.querySelector(".next");
+      resultActions.classList.toggle("good", isGood);
+      resultActions.classList.add("show");
+      nextButton.hidden = !isGood;
+    }
+
+    function hideResultActions() {
+      if (!resultActions) return;
+      clearResultActionTimer();
+      resultActions.classList.remove("show", "good");
+      resultActions.querySelector(".next").hidden = true;
+    }
+
+    function clearResultActionTimer() {
+      if (resultActionTimer === null) return;
+      window.clearTimeout(resultActionTimer);
+      resultActionTimer = null;
+    }
+
+    function reset() {
+      current = start;
+      path = [start];
+      locked = false;
+      hideResultActions();
+      app.classList.remove("wrong-mode");
+      renderCaption("森の入口", "方向ボタンで進み、赤ずきんを正解のルートに導きましょう");
+      renderScene("ready");
+      renderMaze();
+    }
+
+    function renderCaption(title, text) {
+      stageTitle.innerHTML = addRuby(title);
+      stageText.innerHTML = addRuby(text);
+      stageText.style.fontSize = "";
+      window.requestAnimationFrame(fitStageText);
+    }
+
+    function fitStageText() {
+      const minSize = 5;
+      let size = parseFloat(window.getComputedStyle(stageText).fontSize);
+      while (stageText.scrollWidth > stageText.clientWidth && size > minSize) {
+        size -= 0.5;
+        stageText.style.fontSize = `${size}px`;
+      }
+    }
+
+    window.addEventListener("resize", () => {
+      stageText.style.fontSize = "";
+      window.requestAnimationFrame(fitStageText);
+    });
+
+    function addRuby(text) {
+      let html = "";
+      for (let index = 0; index < text.length;) {
+        const term = rubyTerms.find(([word]) => text.startsWith(word, index));
+        if (term) {
+          const [word, rubyHtml] = term;
+          html += rubyHtml;
+          index += word.length;
+        } else {
+          html += escapeHtml(text[index]);
+          index += 1;
+        }
+      }
+      return html;
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function startAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      if (!bgmAudio) startBgm();
+      if (bgmAudio.paused) bgmAudio.play().catch(() => {});
+    }
+
+    function startBgm() {
+      bgmAudio = new Audio("assets/ゆったりお散歩.mp3");
+      bgmAudio.loop = true;
+      bgmAudio.volume = bgmVolume;
+      bgmAudio.preload = "auto";
+      bgmAudio.play().catch(() => {});
+    }
+
+    function captureDriftPositions() {
+      return {
+        trees: [...stage.querySelectorAll(".tree-sprite")].map(captureDriftSprite),
+        grass: [...stage.querySelectorAll(".grass-sprite")].map(captureDriftSprite)
+      };
+    }
+
+    function captureDriftSprite(sprite) {
+      const style = window.getComputedStyle(sprite);
+      return {
+        transform: style.transform === "none" ? "translateX(0)" : style.transform
+      };
+    }
+
+    function freezeDriftPositions(snapshot) {
+      freezeDriftSprites(".tree-sprite", snapshot.trees);
+      freezeDriftSprites(".grass-sprite", snapshot.grass);
+    }
+
+    function freezeDriftSprites(selector, frames) {
+      [...stage.querySelectorAll(selector)].forEach((sprite, index) => {
+        const frame = frames[index];
+        if (!frame) return;
+        sprite.style.animation = "none";
+        sprite.style.transform = frame.transform;
+      });
+    }
+
+    function playTone(freq, duration, type = "sine", volume = 0.05, attack = 0.01, release = 0.12) {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(Math.min(volume * seVolumeScale, 1), now + attack);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration + release);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + duration + release + 0.02);
+    }
+
+    function playStepSound() {
+      playTone(880, 0.045, "triangle", 0.074, 0.005, 0.06);
+      window.setTimeout(() => playTone(1174.66, 0.04, "triangle", 0.054, 0.005, 0.05), 45);
+    }
+
+    function playBumpSound() {
+      playTone(220, 0.08, "square", 0.064, 0.005, 0.09);
+      window.setTimeout(() => playTone(174.61, 0.08, "square", 0.052, 0.005, 0.1), 55);
+    }
+
+    function playFinishSound(ending) {
+      const lightRouteSounds = new Set(["flower", "flyingHat", "cloudRide", "mushroomDance", "pie", "song", "puddingSeat"]);
+      if (lightRouteSounds.has(ending.type)) {
+        [783.99, 987.77, 1174.66, 1567.98].forEach((freq, index) => {
+          window.setTimeout(() => playTone(freq, 0.12, "triangle", 0.084, 0.008, 0.14), index * 85);
+        });
+        return;
+      }
+      if (ending.good) {
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, index) => {
+          window.setTimeout(() => playTone(freq, 0.16, "triangle", 0.092, 0.01, 0.18), index * 100);
+        });
+        return;
+      }
+      [349.23, 293.66, 261.63].forEach((freq, index) => {
+        window.setTimeout(() => playTone(freq, 0.13, "sine", 0.074, 0.01, 0.15), index * 95);
+      });
+    }
+
+    function renderScene(type) {
+      const object = sceneObject(type);
+      const heroSrc = object.hero || walkFrames[walkFrame];
+      const heroClass = object.hero ? "walk-hero reaction-hero" : "walk-hero";
+      const heroHtml = object.routeArt ? "" : `<img id="walkHero" class="${heroClass}" src="${heroSrc}" alt="">`;
+      stageShell.classList.remove("paused", "walking");
+      stage.innerHTML = `
+        <div class="drifting-trees" aria-hidden="true">
+          <img class="tree-sprite" style="--tree-delay: -1.2s;" src="assets/scene/stickers/tree-selected-06.png" alt="">
+          <img class="tree-sprite" style="--tree-delay: -4.0s;" src="assets/scene/stickers/tree-selected-06.png" alt="">
+          <img class="tree-sprite" style="--tree-delay: -6.8s;" src="assets/scene/stickers/tree-selected-06.png" alt="">
+          <img class="tree-sprite" style="--tree-delay: -9.6s;" src="assets/scene/stickers/tree-selected-06.png" alt="">
+          <img class="tree-sprite" style="--tree-delay: -12.4s;" src="assets/scene/stickers/tree-selected-06.png" alt="">
+          <img class="tree-sprite" style="--tree-delay: -15.2s;" src="assets/scene/stickers/tree-selected-06.png" alt="">
+          <img class="tree-sprite" style="--tree-delay: -18.0s;" src="assets/scene/stickers/tree-selected-06.png" alt="">
+          <img class="tree-sprite" style="--tree-delay: -20.8s;" src="assets/scene/stickers/tree-selected-06.png" alt="">
+          <img class="tree-sprite" style="--tree-delay: -23.6s;" src="assets/scene/stickers/tree-selected-06.png" alt="">
+        </div>
+        ${heroHtml}
+        ${object.html}
+        <div class="drifting-grass" aria-hidden="true">
+          <img class="grass-sprite back" style="--grass-delay: -1.8s;" src="assets/scene/stickers/grass-selected-06.png" alt="">
+          <img class="grass-sprite mid" style="--grass-delay: -6.1s;" src="assets/scene/stickers/grass-selected-06.png" alt="">
+          <img class="grass-sprite front" style="--grass-delay: -3.8s;" src="assets/scene/stickers/grass-selected-06.png" alt="">
+        </div>
+      `;
+    }
+
+    function scrollLayer(stripClass, panelClass, content) {
+      return `<div class="${stripClass}" aria-hidden="true"><div class="${panelClass}">${content}</div><div class="${panelClass}">${content}</div></div>`;
+    }
+
+    function sceneObject(type) {
+      const routeArt = (letter, motion = "sway", size = "") => ({
+        routeArt: true,
+        html: `<div class="route-slot ${motion} ${size}"><img class="route-art ${motion} ${size}" src="assets/scene/${letter}.png" alt=""></div>`
+      });
+      const objects = {
+        ready: { html: "" },
+        flower: routeArt("A"),
+        flyingHat: routeArt("B", "fly"),
+        cloudRide: routeArt("C", "cloud-ride"),
+        mushroomDance: routeArt("D", "spin"),
+        lake: routeArt("D", "spin"),
+        whistle: routeArt("F"),
+        pie: routeArt("E"),
+        song: routeArt("F"),
+        bird: routeArt("E"),
+        puddingSeat: routeArt("G"),
+        home: routeArt("H", "sway", "wide")
+      };
+      return objects[type] || objects.ready;
+    }
+    function connect(ids) {
+      for (let i = 0; i < ids.length - 1; i += 1) {
+        graph.get(ids[i]).add(ids[i + 1]);
+        graph.get(ids[i + 1]).add(ids[i]);
+      }
+    }
+
+    function writeText(ids, text) {
+      const chars = [...text];
+      if (ids.length !== chars.length) throw new Error(`${text} の文字数がルート長と違います`);
+      chars.forEach((char, index) => labels.set(ids[index], char));
+    }
+
+    function validateMaze() {
+      const all = new Set([...trunk, ...routeA, ...routeB, ...routeC, ...routeD, ...routeE, ...routeF, ...routeG, ...routeH]);
+      if (all.size !== 100 || labels.size !== 100) throw new Error("迷路が100マスで構成されていません");
+      const seen = new Set([start]);
+      const queue = [start];
+      while (queue.length) {
+        const id = queue.shift();
+        for (const next of graph.get(id)) {
+          if (seen.has(next)) continue;
+          seen.add(next);
+          queue.push(next);
+        }
+      }
+      if (seen.size !== 100) throw new Error("到達できないマスがあります");
+      const badCount = [...endings.values()].filter((ending) => !ending.good).length;
+      if (badCount < 7) throw new Error("不正解ルートが7本未満です");
+    }
+
+    function key(x, y) {
+      return `${x},${y}`;
+    }
+
+    function toKey([x, y]) {
+      return key(x, y);
+    }
+
+    function last(items) {
+      return items[items.length - 1];
+    }
+  </script>
+</body>
+</html>
