@@ -13,7 +13,7 @@ const restartButton = document.getElementById("restartButton");
 const countdownBox = document.getElementById("countdownBox");
 const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
-const GAME_VERSION = "1.0.10";
+const GAME_VERSION = "1.0.11";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
@@ -21,6 +21,12 @@ const introVoiceFiles = [
   "voice/スタート！.mp3"
 ];
 const gameBgmFile = "bgm/漢祭り.mp3";
+const finishSeFiles = [
+  "se/ブウーン.mp3",
+  "se/歓声と拍手.mp3",
+  "se/爆発.mp3",
+  "se/試合終了のゴング.mp3"
+];
 const introCueTimings = {
   step2: 1200,
   step3: 2600,
@@ -80,6 +86,7 @@ let introAudioBlocked = false;
 let introAwaitingAudioGesture = false;
 let bgmAudio = null;
 let bgmShouldPlay = false;
+let finishSeAudios = [];
 let shareButton = null;
 let shareStatus = null;
 
@@ -188,9 +195,7 @@ function initEffectAudio() {
 
   effectAudioMap = {
     tick: createEffectAudio("tick", .12),
-    warn: createEffectAudio("warn", .16),
-    boom: createEffectAudio("boom", .58),
-    fever: createEffectAudio("fever", .94)
+    warn: createEffectAudio("warn", .16)
   };
 }
 
@@ -304,6 +309,7 @@ function unlockEffectAudioFromGesture() {
     if (playPromise && playPromise.then) {
       playPromise
         .then(() => {
+          if (!audio.muted) return;
           audio.pause();
           audio.currentTime = 0;
           audio.muted = false;
@@ -506,8 +512,71 @@ function stopBgm(reset = false) {
   if (reset) bgmAudio.currentTime = 0;
 }
 
+function loadFinishSe() {
+  if (finishSeAudios.length) return;
+  finishSeAudios = finishSeFiles.map((src) => {
+    const audio = new Audio(src);
+    audio.preload = "auto";
+    audio.volume = .9;
+    return audio;
+  });
+}
+
+function unlockFinishSeFromGesture() {
+  loadFinishSe();
+  finishSeAudios.forEach((audio) => {
+    const originalVolume = audio.volume;
+    audio.muted = true;
+    audio.volume = .001;
+    audio.currentTime = 0;
+
+    const playPromise = audio.play();
+    if (playPromise && playPromise.then) {
+      playPromise
+        .then(() => {
+          if (!audio.muted) return;
+          audio.pause();
+          audio.currentTime = 0;
+          audio.muted = false;
+          audio.volume = originalVolume;
+        })
+        .catch(() => {
+          audio.muted = false;
+          audio.volume = originalVolume;
+        });
+    } else {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.muted = false;
+      audio.volume = originalVolume;
+    }
+  });
+}
+
+function playRandomFinishSe() {
+  loadFinishSe();
+  if (!finishSeAudios.length) return;
+
+  stopFinishSe();
+  const audio = finishSeAudios[Math.floor(Math.random() * finishSeAudios.length)];
+  audio.pause();
+  audio.currentTime = 0;
+  audio.muted = false;
+  audio.volume = .9;
+  const playPromise = audio.play();
+  if (playPromise && playPromise.catch) playPromise.catch(() => {});
+}
+
+function stopFinishSe() {
+  finishSeAudios.forEach((audio) => {
+    audio.pause();
+    audio.currentTime = 0;
+  });
+}
+
 function unlockAudioFromGesture() {
   unlockEffectAudioFromGesture();
+  unlockFinishSeFromGesture();
   if (bgmShouldPlay && running && !finished) {
     playBgm();
   } else {
@@ -589,7 +658,7 @@ function finishGame() {
   shareButton.disabled = false;
   shareButton.textContent = "Xにポスト";
   shareStatus.textContent = "";
-  beep(maxTemperature >= 140 ? "fever" : "boom");
+  playRandomFinishSe();
 }
 
 function addFriction(clientX, clientY, now) {
@@ -704,6 +773,7 @@ function restart() {
   clearIntroTimers();
   stopIntroVoices();
   stopBgm(true);
+  stopFinishSe();
   temperature = BASE_TEMP;
   maxTemperature = BASE_TEMP;
   power = 0;
