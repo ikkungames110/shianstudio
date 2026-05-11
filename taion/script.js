@@ -13,7 +13,7 @@ const restartButton = document.getElementById("restartButton");
 const countdownBox = document.getElementById("countdownBox");
 const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
-const GAME_VERSION = "1.0.5";
+const GAME_VERSION = "1.0.6";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
@@ -26,6 +26,7 @@ const introCueTimings = {
   start: 4050,
   round: 5050
 };
+const MAX_PENDING_BEEPS = 6;
 
 const BASE_TEMP = 36.5;
 const ROUND_TIME = 10;
@@ -63,6 +64,9 @@ let segmentTravel = 0;
 let lastTurnTime = 0;
 let soundReady = false;
 let audioContext = null;
+let audioResumePromise = null;
+let audioPrimed = false;
+let pendingBeeps = [];
 let lastBeep = 0;
 let lastFrame = performance.now();
 let introTimers = [];
@@ -122,20 +126,85 @@ function getStage(value) {
 
 function initAudio() {
   if (soundReady) {
-    if (audioContext && audioContext.state === "suspended") audioContext.resume();
+    resumeAudioContext();
     return;
   }
   const AudioCtor = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtor) return;
   audioContext = new AudioCtor();
-  if (audioContext.state === "suspended") audioContext.resume();
   soundReady = true;
+  primeAudioOutput();
+  resumeAudioContext();
+}
+
+function resumeAudioContext() {
+  if (!audioContext) return Promise.resolve(false);
+  if (audioContext.state === "running") {
+    flushPendingBeeps();
+    return Promise.resolve(true);
+  }
+  if (audioContext.state === "closed") return Promise.resolve(false);
+  if (audioResumePromise) return audioResumePromise;
+
+  audioResumePromise = audioContext.resume()
+    .then(() => {
+      audioResumePromise = null;
+      primeAudioOutput();
+      if (audioContext.state === "running") {
+        flushPendingBeeps();
+        return true;
+      }
+      return false;
+    })
+    .catch(() => {
+      audioResumePromise = null;
+      return false;
+    });
+
+  return audioResumePromise;
+}
+
+function primeAudioOutput() {
+  if (!audioContext || audioPrimed || audioContext.state === "closed") return;
+
+  const osc = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+  osc.connect(gain);
+  gain.connect(audioContext.destination);
+  osc.start(audioContext.currentTime);
+  osc.stop(audioContext.currentTime + .02);
+  audioPrimed = true;
+}
+
+function queueBeep(kind) {
+  pendingBeeps.push(kind);
+  if (pendingBeeps.length > MAX_PENDING_BEEPS) pendingBeeps.shift();
+  resumeAudioContext();
+}
+
+function flushPendingBeeps() {
+  if (!audioContext || audioContext.state !== "running" || !pendingBeeps.length) return;
+
+  const beeps = pendingBeeps.splice(0);
+  beeps.forEach((kind, index) => playBeep(kind, index * .07));
 }
 
 function beep(kind = "tick") {
+  initAudio();
+  if (!audioContext) return;
+  if (audioContext.state !== "running") {
+    queueBeep(kind);
+    return;
+  }
+
+  playBeep(kind);
+}
+
+function playBeep(kind = "tick", delay = 0) {
   if (!audioContext || audioContext.state !== "running") return;
 
-  const now = audioContext.currentTime;
+  const now = audioContext.currentTime + delay;
   const osc = audioContext.createOscillator();
   const gain = audioContext.createGain();
   const frequency = kind === "boom" ? 76 : kind === "warn" ? 880 : 1320;
