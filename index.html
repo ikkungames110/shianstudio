@@ -8,6 +8,8 @@
       name="description"
       content="短時間で直感的に楽しめるブラウザゲームを制作する、しあんスタジオのホームページ。"
     >
+    <meta name="author" content="SHIAN STUDIO">
+    <link rel="canonical" href="https://shianstudio.com/">
     <style>
       :root {
         color-scheme: light;
@@ -256,6 +258,39 @@
         line-height: 1.8;
       }
 
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .info-card {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 22px;
+        background: rgba(255, 255, 255, 0.76);
+        box-shadow: 0 12px 28px rgba(50, 45, 66, 0.08);
+      }
+
+      .info-card h3 {
+        margin: 0 0 12px;
+        font-size: 1.15rem;
+        line-height: 1.4;
+      }
+
+      .info-card p {
+        margin: 0;
+        color: var(--muted);
+        font-weight: 700;
+        line-height: 1.85;
+      }
+
+      .info-card a {
+        color: var(--accent-strong);
+        font-weight: 900;
+      }
+
       .works-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -432,6 +467,17 @@
         font-weight: 800;
       }
 
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 14px;
+      }
+
+      .footer-links a {
+        text-decoration: none;
+      }
+
       @media (max-width: 880px) {
         .nav {
           min-height: 58px;
@@ -485,6 +531,7 @@
         }
 
         .works-grid,
+        .info-grid,
         .about-grid {
           grid-template-columns: 1fr;
         }
@@ -508,6 +555,10 @@
         .footer-inner {
           align-items: start;
           flex-direction: column;
+        }
+
+        .footer-links {
+          justify-content: flex-start;
         }
       }
 
@@ -558,6 +609,7 @@
         <div class="nav-links">
           <a href="#works">Works</a>
           <a href="#about">About</a>
+          <a href="/contact.html">Contact</a>
           <a class="button secondary" href="https://x.com/shianstudio?s=11" target="_blank" rel="noopener noreferrer">X</a>
         </div>
       </nav>
@@ -660,12 +712,49 @@
           </div>
         </div>
       </section>
+
+      <section class="section" id="site-info" aria-labelledby="site-info-title">
+        <div class="section-inner">
+          <div class="section-heading">
+            <h2 id="site-info-title">Site Info</h2>
+            <p>安心して遊べるよう、運営者情報、広告掲載、データの扱いを明確にしています。</p>
+          </div>
+          <div class="info-grid">
+            <section class="info-card" aria-labelledby="policy-title">
+              <h3 id="policy-title">プライバシーと広告</h3>
+              <p>
+                Cookie、アクセス解析、広告配信に関する情報を
+                <a href="/privacy.html">プライバシーポリシー</a>にまとめています。
+              </p>
+            </section>
+            <section class="info-card" aria-labelledby="contact-title">
+              <h3 id="contact-title">お問い合わせ</h3>
+              <p>
+                不具合報告、権利に関する連絡、掲載内容の確認は
+                <a href="/contact.html">お問い合わせ</a>から受け付けています。
+              </p>
+            </section>
+            <section class="info-card" aria-labelledby="terms-title">
+              <h3 id="terms-title">利用ルール</h3>
+              <p>
+                ゲームの利用条件、禁止事項、免責事項は
+                <a href="/terms.html">利用規約</a>で確認できます。
+              </p>
+            </section>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="site-footer">
       <div class="footer-inner">
         <span>© SHIAN STUDIO</span>
-        <a href="https://x.com/shianstudio?s=11" target="_blank" rel="noopener noreferrer">x.com/shianstudio</a>
+        <nav class="footer-links" aria-label="フッターナビゲーション">
+          <a href="/privacy.html">Privacy Policy</a>
+          <a href="/terms.html">Terms</a>
+          <a href="/contact.html">Contact</a>
+          <a href="https://x.com/shianstudio?s=11" target="_blank" rel="noopener noreferrer">X</a>
+        </nav>
       </div>
     </footer>
   </body>

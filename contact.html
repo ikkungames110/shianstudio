@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>お問い合わせ | SHIAN STUDIO</title>
+    <meta name="description" content="SHIAN STUDIOへのお問い合わせ。不具合報告、権利に関する連絡、掲載内容の確認はこちら。">
+    <meta name="author" content="SHIAN STUDIO">
+    <link rel="canonical" href="https://shianstudio.com/contact.html">
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #252331;
+        --muted: #666174;
+        --paper: #fffdf7;
+        --line: #e8e0d1;
+        --accent: #4d5fcb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+        background: var(--paper);
+      }
+
+      a {
+        color: var(--accent);
+        font-weight: 800;
+      }
+
+      .site-header {
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 253, 247, 0.92);
+      }
+
+      .nav,
+      .content,
+      .footer-inner {
+        width: min(880px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .nav {
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .brand {
+        color: var(--ink);
+        font-weight: 900;
+        text-decoration: none;
+      }
+
+      .nav-links,
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .nav-links a,
+      .footer-links a {
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      .content {
+        padding: 56px 0 72px;
+      }
+
+      h1 {
+        margin: 0 0 18px;
+        font-size: clamp(2.2rem, 7vw, 4.2rem);
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin: 42px 0 12px;
+        border-top: 1px solid var(--line);
+        padding-top: 28px;
+        font-size: 1.45rem;
+        letter-spacing: 0;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+        font-weight: 700;
+        line-height: 1.9;
+      }
+
+      ul {
+        padding-left: 1.3em;
+      }
+
+      .lead {
+        font-size: 1.05rem;
+      }
+
+      .contact-box {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        margin-top: 28px;
+        padding: 24px;
+        background: #fff;
+      }
+
+      .contact-box p {
+        margin: 0;
+      }
+
+      .contact-box h2 {
+        margin-top: 0;
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .button {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        margin-top: 18px;
+        padding: 10px 16px;
+        color: #fff;
+        background: var(--accent);
+        text-decoration: none;
+      }
+
+      .site-footer {
+        border-top: 1px solid var(--line);
+        padding: 26px 0;
+        background: #fff;
+      }
+
+      .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      @media (max-width: 640px) {
+        .nav,
+        .footer-inner {
+          align-items: flex-start;
+          flex-direction: column;
+          padding: 14px 0;
+        }
+
+        .button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="メインナビゲーション">
+        <a class="brand" href="/">SHIAN STUDIO</a>
+        <div class="nav-links">
+          <a href="/">Home</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="content">
+      <h1>お問い合わせ</h1>
+      <p class="lead">
+        SHIAN STUDIOへのご連絡は、下記の公式Xアカウントからお願いします。不具合報告、権利に関する連絡、掲載内容の確認を受け付けています。
+      </p>
+
+      <section class="contact-box" aria-labelledby="x-contact-title">
+        <h2 id="x-contact-title">連絡先</h2>
+        <p>
+          公式X:
+          <a href="https://x.com/shianstudio?s=11" target="_blank" rel="noopener noreferrer">@shianstudio</a>
+        </p>
+        <a class="button" href="https://x.com/shianstudio?s=11" target="_blank" rel="noopener noreferrer">Xで連絡する</a>
+      </section>
+
+      <h2>連絡時に書いてほしい内容</h2>
+      <ul>
+        <li>対象ページのURL</li>
+        <li>発生した内容、確認した日時、利用端末やブラウザ</li>
+        <li>返信が必要な場合の連絡先</li>
+      </ul>
+
+      <h2>個人情報の取り扱い</h2>
+      <p>
+        お問い合わせで受け取った情報は、返信、確認、必要な対応のために利用します。詳しくは
+        <a href="/privacy.html">プライバシーポリシー</a>
+        をご確認ください。
+      </p>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <span>© SHIAN STUDIO</span>
+        <nav class="footer-links" aria-label="フッターナビゲーション">
+          <a href="/">Home</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>
