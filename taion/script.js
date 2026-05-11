@@ -15,7 +15,7 @@ const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
 const vignetteAd = document.getElementById("vignetteAd");
 const closeVignetteAdButton = document.getElementById("closeVignetteAdButton");
-const GAME_VERSION = "1.0.18";
+const GAME_VERSION = "1.0.19";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
@@ -39,7 +39,7 @@ const MAX_PENDING_BEEPS = 6;
 
 const BASE_TEMP = 36.5;
 const ROUND_TIME = 10;
-const VISUAL_MAX_TEMP = 2200;
+const VISUAL_MAX_TEMP = 100;
 
 const stageCopy = [
   { max: 42, stage: "stage-normal", status: "こすれ！", note: "平熱の顔で圧をかけろ" },
