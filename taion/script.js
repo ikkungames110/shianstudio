@@ -13,7 +13,7 @@ const restartButton = document.getElementById("restartButton");
 const countdownBox = document.getElementById("countdownBox");
 const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
-const GAME_VERSION = "1.0.11";
+const GAME_VERSION = "1.0.12";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
@@ -87,6 +87,7 @@ let introAwaitingAudioGesture = false;
 let bgmAudio = null;
 let bgmShouldPlay = false;
 let finishSeAudios = [];
+let finishSePreloaded = false;
 let shareButton = null;
 let shareStatus = null;
 
@@ -522,35 +523,13 @@ function loadFinishSe() {
   });
 }
 
-function unlockFinishSeFromGesture() {
+function preloadFinishSe() {
+  if (finishSePreloaded) return;
   loadFinishSe();
   finishSeAudios.forEach((audio) => {
-    const originalVolume = audio.volume;
-    audio.muted = true;
-    audio.volume = .001;
-    audio.currentTime = 0;
-
-    const playPromise = audio.play();
-    if (playPromise && playPromise.then) {
-      playPromise
-        .then(() => {
-          if (!audio.muted) return;
-          audio.pause();
-          audio.currentTime = 0;
-          audio.muted = false;
-          audio.volume = originalVolume;
-        })
-        .catch(() => {
-          audio.muted = false;
-          audio.volume = originalVolume;
-        });
-    } else {
-      audio.pause();
-      audio.currentTime = 0;
-      audio.muted = false;
-      audio.volume = originalVolume;
-    }
+    audio.load();
   });
+  finishSePreloaded = true;
 }
 
 function playRandomFinishSe() {
@@ -576,7 +555,7 @@ function stopFinishSe() {
 
 function unlockAudioFromGesture() {
   unlockEffectAudioFromGesture();
-  unlockFinishSeFromGesture();
+  preloadFinishSe();
   if (bgmShouldPlay && running && !finished) {
     playBgm();
   } else {
