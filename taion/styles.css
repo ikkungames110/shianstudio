@@ -581,8 +581,11 @@ button {
   inset: 0;
   z-index: 10;
   display: grid;
-  place-items: center;
-  padding: 20px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 20px 20px max(18px, env(safe-area-inset-bottom));
   background:
     radial-gradient(circle, rgba(255, 255, 255, .88) 0 7%, rgba(255, 221, 45, .84) 8% 22%, rgba(255, 48, 22, .82) 23% 42%, rgba(10, 6, 12, .96) 43%);
   animation: finishIn .35s both;
@@ -698,8 +701,48 @@ button {
   line-height: 1.35;
 }
 
+.result-ad {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  width: min(92vw, 560px);
+  min-height: 56px;
+  padding: 8px 14px;
+  color: #f8f3df;
+  background: #161111;
+  border: 3px solid #f8f3df;
+  box-shadow: 0 6px 0 #160d0d;
+  font-family: Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  transform: rotate(.5deg);
+}
+
+.result-ad span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 28px;
+  padding: 3px 8px;
+  color: #160d0d;
+  background: #ffda31;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.result-ad strong {
+  overflow: hidden;
+  font-size: clamp(18px, 5vw, 28px);
+  letter-spacing: 0;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .game.is-capturing .finish-content button,
-.game.is-capturing .share-status {
+.game.is-capturing .share-status,
+.game.is-capturing .result-ad {
   display: none;
 }
 
