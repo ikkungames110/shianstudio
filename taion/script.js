@@ -13,7 +13,7 @@ const restartButton = document.getElementById("restartButton");
 const countdownBox = document.getElementById("countdownBox");
 const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
-const GAME_VERSION = "1.0.8";
+const GAME_VERSION = "1.0.9";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
@@ -66,6 +66,8 @@ let soundReady = false;
 let audioContext = null;
 let audioResumePromise = null;
 let audioPrimed = false;
+let effectAudioUnlocked = false;
+let effectAudioMap = null;
 let pendingBeeps = [];
 let lastBeep = 0;
 let lastFrame = performance.now();
@@ -125,6 +127,7 @@ function getStage(value) {
 }
 
 function initAudio() {
+  initEffectAudio();
   if (soundReady) {
     resumeAudioContext();
     return;
@@ -165,7 +168,7 @@ function resumeAudioContext() {
 }
 
 function primeAudioOutput() {
-  if (!audioContext || audioPrimed || audioContext.state === "closed") return;
+  if (!audioContext || audioPrimed || audioContext.state !== "running") return;
 
   const osc = audioContext.createOscillator();
   const gain = audioContext.createGain();
@@ -175,6 +178,169 @@ function primeAudioOutput() {
   osc.start(audioContext.currentTime);
   osc.stop(audioContext.currentTime + .02);
   audioPrimed = true;
+}
+
+function initEffectAudio() {
+  if (effectAudioMap) return;
+
+  effectAudioMap = {
+    tick: createEffectAudio("tick", .12),
+    warn: createEffectAudio("warn", .16),
+    boom: createEffectAudio("boom", .58),
+    fever: createEffectAudio("fever", .94)
+  };
+}
+
+function createEffectAudio(kind, duration) {
+  const audio = new Audio(createEffectWavUrl(kind, duration));
+  audio.preload = "auto";
+  audio.volume = .92;
+  return audio;
+}
+
+function createEffectWavUrl(kind, duration) {
+  const sampleRate = 24000;
+  const sampleCount = Math.floor(sampleRate * duration);
+  const wav = new ArrayBuffer(44 + sampleCount * 2);
+  const view = new DataView(wav);
+
+  writeAscii(view, 0, "RIFF");
+  view.setUint32(4, 36 + sampleCount * 2, true);
+  writeAscii(view, 8, "WAVE");
+  writeAscii(view, 12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeAscii(view, 36, "data");
+  view.setUint32(40, sampleCount * 2, true);
+
+  for (let i = 0; i < sampleCount; i += 1) {
+    const t = i / sampleRate;
+    const sample = clamp(effectSample(kind, t, duration), -1, 1);
+    view.setInt16(44 + i * 2, sample * 32767, true);
+  }
+
+  return URL.createObjectURL(new Blob([wav], { type: "audio/wav" }));
+}
+
+function writeAscii(view, offset, text) {
+  for (let i = 0; i < text.length; i += 1) {
+    view.setUint8(offset + i, text.charCodeAt(i));
+  }
+}
+
+function effectSample(kind, t, duration) {
+  if (kind === "fever") return feverEffectSample(t);
+  if (kind === "boom") {
+    const freq = 96 - 58 * clamp(t / duration, 0, 1);
+    return sawSample(freq, t) * envelope(t, duration, .008, .55) * .78;
+  }
+
+  const freq = kind === "warn" ? 980 : 1320;
+  return squareSample(freq, t) * envelope(t, duration, .004, .45) * (kind === "warn" ? .58 : .42);
+}
+
+function feverEffectSample(t) {
+  const sweeps = [
+    { start: 0, from: 520, to: 1760, duration: .16 },
+    { start: .18, from: 680, to: 2240, duration: .17 },
+    { start: .37, from: 620, to: 2080, duration: .18 }
+  ];
+  let sample = 0;
+
+  sweeps.forEach((sweep) => {
+    const localT = t - sweep.start;
+    if (localT < 0 || localT > sweep.duration) return;
+    const rate = localT / sweep.duration;
+    const freq = sweep.from * Math.pow(sweep.to / sweep.from, rate);
+    sample += triangleSample(freq, localT) * envelope(localT, sweep.duration, .012, .38) * .52;
+  });
+
+  if (t >= .52) {
+    const boomT = t - .52;
+    const boomDuration = .42;
+    const freq = 112 - 64 * clamp(boomT / boomDuration, 0, 1);
+    sample += sawSample(freq, boomT) * envelope(boomT, boomDuration, .01, .5) * .64;
+  }
+
+  return sample;
+}
+
+function envelope(t, duration, attack, decayPower) {
+  const attackLevel = clamp(t / attack, 0, 1);
+  const releaseLevel = Math.pow(1 - clamp(t / duration, 0, 1), decayPower);
+  return attackLevel * releaseLevel;
+}
+
+function squareSample(freq, t) {
+  return Math.sin(Math.PI * 2 * freq * t) >= 0 ? 1 : -1;
+}
+
+function triangleSample(freq, t) {
+  return 2 * Math.abs(2 * ((freq * t) % 1) - 1) - 1;
+}
+
+function sawSample(freq, t) {
+  return 2 * ((freq * t) % 1) - 1;
+}
+
+function unlockEffectAudioFromGesture() {
+  initEffectAudio();
+  effectAudioUnlocked = true;
+
+  Object.values(effectAudioMap).forEach((audio) => {
+    const originalVolume = audio.volume;
+    audio.muted = true;
+    audio.volume = .001;
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    if (playPromise && playPromise.then) {
+      playPromise
+        .then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.muted = false;
+          audio.volume = originalVolume;
+        })
+        .catch(() => {
+          audio.muted = false;
+          audio.volume = originalVolume;
+        });
+    } else {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.muted = false;
+      audio.volume = originalVolume;
+    }
+  });
+}
+
+function playHtmlEffect(kind, delay = 0) {
+  if (!effectAudioUnlocked) return false;
+  initEffectAudio();
+
+  const audio = effectAudioMap[kind];
+  if (!audio) return false;
+
+  const play = () => {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.muted = false;
+    audio.volume = .92;
+    const playPromise = audio.play();
+    if (playPromise && playPromise.catch) playPromise.catch(() => {});
+  };
+
+  if (delay > 0) {
+    setTimeout(play, delay * 1000);
+  } else {
+    play();
+  }
+  return true;
 }
 
 function queueBeep(kind) {
@@ -202,6 +368,7 @@ function beep(kind = "tick") {
 }
 
 function playBeep(kind = "tick", delay = 0) {
+  if (playHtmlEffect(kind, delay)) return;
   if (!audioContext || audioContext.state !== "running") return;
 
   if (kind === "fever") {
@@ -283,6 +450,7 @@ function playIntroVoice(index) {
 }
 
 function unlockAudioFromGesture() {
+  unlockEffectAudioFromGesture();
   initAudio();
   if (introStarted && introAwaitingAudioGesture && !introOverlay.classList.contains("is-hidden")) {
     introAwaitingAudioGesture = false;
