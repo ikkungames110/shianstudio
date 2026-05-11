@@ -13,7 +13,7 @@ const restartButton = document.getElementById("restartButton");
 const countdownBox = document.getElementById("countdownBox");
 const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
-const GAME_VERSION = "1.0.12";
+const GAME_VERSION = "1.0.13";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
@@ -297,35 +297,11 @@ function sawSample(freq, t) {
   return 2 * ((freq * t) % 1) - 1;
 }
 
-function unlockEffectAudioFromGesture() {
+function preloadEffectAudio() {
   initEffectAudio();
   effectAudioUnlocked = true;
-
   Object.values(effectAudioMap).forEach((audio) => {
-    const originalVolume = audio.volume;
-    audio.muted = true;
-    audio.volume = .001;
-    audio.currentTime = 0;
-    const playPromise = audio.play();
-    if (playPromise && playPromise.then) {
-      playPromise
-        .then(() => {
-          if (!audio.muted) return;
-          audio.pause();
-          audio.currentTime = 0;
-          audio.muted = false;
-          audio.volume = originalVolume;
-        })
-        .catch(() => {
-          audio.muted = false;
-          audio.volume = originalVolume;
-        });
-    } else {
-      audio.pause();
-      audio.currentTime = 0;
-      audio.muted = false;
-      audio.volume = originalVolume;
-    }
+    audio.load();
   });
 }
 
@@ -467,33 +443,9 @@ function loadBgm() {
   bgmAudio.volume = .62;
 }
 
-function unlockBgmFromGesture() {
+function preloadBgm() {
   loadBgm();
-  const originalVolume = bgmAudio.volume;
-  bgmAudio.muted = true;
-  bgmAudio.volume = .001;
-  bgmAudio.currentTime = 0;
-
-  const playPromise = bgmAudio.play();
-  if (playPromise && playPromise.then) {
-    playPromise
-      .then(() => {
-        if (bgmShouldPlay) return;
-        bgmAudio.pause();
-        bgmAudio.currentTime = 0;
-        bgmAudio.muted = false;
-        bgmAudio.volume = originalVolume;
-      })
-      .catch(() => {
-        bgmAudio.muted = false;
-        bgmAudio.volume = originalVolume;
-      });
-  } else {
-    bgmAudio.pause();
-    bgmAudio.currentTime = 0;
-    bgmAudio.muted = false;
-    bgmAudio.volume = originalVolume;
-  }
+  bgmAudio.load();
 }
 
 function playBgm() {
@@ -554,12 +506,12 @@ function stopFinishSe() {
 }
 
 function unlockAudioFromGesture() {
-  unlockEffectAudioFromGesture();
+  preloadEffectAudio();
   preloadFinishSe();
   if (bgmShouldPlay && running && !finished) {
     playBgm();
   } else {
-    unlockBgmFromGesture();
+    preloadBgm();
   }
   initAudio();
   if (introStarted && introAwaitingAudioGesture && !introOverlay.classList.contains("is-hidden")) {
@@ -702,9 +654,36 @@ function addFriction(clientX, clientY, now) {
   lastTime = now;
 }
 
+function beginInput(clientX, clientY, now) {
+  unlockAudioFromGesture();
+  if (!started || !running || finished) return;
+  initAudio();
+  if (bgmShouldPlay && bgmAudio && bgmAudio.paused) playBgm();
+  lastPoint = { x: clientX, y: clientY };
+  lastTime = now;
+  lastDirection = 0;
+  segmentTravel = 0;
+  lastTurnTime = now;
+}
+
+function handlePointerDown(event) {
+  const target = event.target;
+  if (target && target.closest && target.closest("button")) return;
+  if (event.cancelable) event.preventDefault();
+  beginInput(event.clientX, event.clientY, performance.now());
+}
+
 function handlePointerMove(event) {
   event.preventDefault();
   addFriction(event.clientX, event.clientY, performance.now());
+}
+
+function handleTouchStart(event) {
+  const target = event.target;
+  if (target && target.closest && target.closest("button")) return;
+  if (event.cancelable) event.preventDefault();
+  const touch = event.touches[0];
+  if (touch) beginInput(touch.clientX, touch.clientY, performance.now());
 }
 
 function handleTouchMove(event) {
@@ -970,16 +949,18 @@ function runIntro(options = {}) {
 }
 
 if (window.PointerEvent) {
+  window.addEventListener("pointerdown", handlePointerDown, { passive: false });
   window.addEventListener("pointermove", handlePointerMove, { passive: false });
   window.addEventListener("pointerup", resetPointer);
   window.addEventListener("pointercancel", resetPointer);
 } else {
+  window.addEventListener("mousedown", handlePointerDown, { passive: false });
   window.addEventListener("mousemove", handlePointerMove, { passive: false });
+  window.addEventListener("mouseup", resetPointer);
+  window.addEventListener("touchstart", handleTouchStart, { passive: false });
   window.addEventListener("touchmove", handleTouchMove, { passive: false });
   window.addEventListener("touchend", resetPointer);
 }
-window.addEventListener("pointerdown", unlockAudioFromGesture);
-window.addEventListener("touchstart", unlockAudioFromGesture, { passive: false });
 window.addEventListener("click", unlockAudioFromGesture);
 window.addEventListener("keydown", unlockAudioFromGesture);
 window.addEventListener("touchstart", blockPageTouch, { passive: false });
