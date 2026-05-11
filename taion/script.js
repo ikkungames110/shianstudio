@@ -15,7 +15,7 @@ const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
 const vignetteAd = document.getElementById("vignetteAd");
 const closeVignetteAdButton = document.getElementById("closeVignetteAdButton");
-const GAME_VERSION = "1.0.16";
+const GAME_VERSION = "1.0.17";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
@@ -625,7 +625,7 @@ function addFriction(clientX, clientY, now) {
       const turnsPerSecond = clamp(1000 / interval, 0, 24);
       const turnRate = clamp((turnsPerSecond - 2) / 16, 0, 1);
 
-      power = clamp(power + .018 + turnRate * .032, 0, 1);
+      power = Math.max(0, power + .018 + turnRate * .032);
 
       const meterPressure = .22 + power * .55 + turnRate * .42;
       const elapsedRate = clamp((ROUND_TIME - timeLeft) / ROUND_TIME, 0, 1);
