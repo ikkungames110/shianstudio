@@ -13,7 +13,9 @@ const restartButton = document.getElementById("restartButton");
 const countdownBox = document.getElementById("countdownBox");
 const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
-const GAME_VERSION = "1.0.15";
+const vignetteAd = document.getElementById("vignetteAd");
+const closeVignetteAdButton = document.getElementById("closeVignetteAdButton");
+const GAME_VERSION = "1.0.16";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
@@ -88,6 +90,7 @@ let bgmAudio = null;
 let bgmShouldPlay = false;
 let finishSeAudios = [];
 let finishSePreloaded = false;
+let retryCount = 0;
 let shareButton = null;
 let shareStatus = null;
 
@@ -728,6 +731,27 @@ function loop(now) {
 }
 
 function restart() {
+  retryCount += 1;
+  if (retryCount >= 2) {
+    showVignetteAd();
+    return;
+  }
+
+  restartRound();
+}
+
+function showVignetteAd() {
+  stopFinishSe();
+  vignetteAd.hidden = false;
+  closeVignetteAdButton.focus();
+}
+
+function closeVignetteAd() {
+  vignetteAd.hidden = true;
+  restartRound();
+}
+
+function restartRound() {
   clearIntroTimers();
   stopIntroVoices();
   stopBgm(true);
@@ -969,6 +993,7 @@ window.addEventListener("gesturestart", blockPageTouch, { passive: false });
 window.addEventListener("gesturechange", blockPageTouch, { passive: false });
 window.addEventListener("blur", resetPointer);
 restartButton.addEventListener("click", restart);
+closeVignetteAdButton.addEventListener("click", closeVignetteAd);
 
 updateVisuals();
 renderVersionBadge();
