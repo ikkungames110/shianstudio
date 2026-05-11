@@ -13,7 +13,7 @@ const restartButton = document.getElementById("restartButton");
 const countdownBox = document.getElementById("countdownBox");
 const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
-const GAME_VERSION = "1.0.7";
+const GAME_VERSION = "1.0.8";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
@@ -204,6 +204,11 @@ function beep(kind = "tick") {
 function playBeep(kind = "tick", delay = 0) {
   if (!audioContext || audioContext.state !== "running") return;
 
+  if (kind === "fever") {
+    playFeverAlarm(delay);
+    return;
+  }
+
   const now = audioContext.currentTime + delay;
   const osc = audioContext.createOscillator();
   const gain = audioContext.createGain();
@@ -222,6 +227,33 @@ function playBeep(kind = "tick", delay = 0) {
   gain.connect(audioContext.destination);
   osc.start(now);
   osc.stop(now + duration);
+}
+
+function playFeverAlarm(delay = 0) {
+  const sweeps = [
+    { offset: 0, from: 520, to: 1760, duration: .16 },
+    { offset: .18, from: 680, to: 2240, duration: .17 },
+    { offset: .37, from: 620, to: 2080, duration: .18 }
+  ];
+
+  sweeps.forEach((sweep) => {
+    const now = audioContext.currentTime + delay + sweep.offset;
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(sweep.from, now);
+    osc.frequency.exponentialRampToValueAtTime(sweep.to, now + sweep.duration);
+    gain.gain.setValueAtTime(.001, now);
+    gain.gain.exponentialRampToValueAtTime(.11, now + .025);
+    gain.gain.exponentialRampToValueAtTime(.001, now + sweep.duration);
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.start(now);
+    osc.stop(now + sweep.duration);
+  });
+
+  playBeep("boom", delay + .52);
 }
 
 function loadIntroVoices() {
@@ -326,7 +358,7 @@ function finishGame() {
   shareButton.disabled = false;
   shareButton.textContent = "Xにポスト";
   shareStatus.textContent = "";
-  beep("boom");
+  beep(maxTemperature >= 140 ? "fever" : "boom");
 }
 
 function addFriction(clientX, clientY, now) {
