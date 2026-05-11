@@ -13,13 +13,14 @@ const restartButton = document.getElementById("restartButton");
 const countdownBox = document.getElementById("countdownBox");
 const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
-const GAME_VERSION = "1.0.9";
+const GAME_VERSION = "1.0.10";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
   "voice/こすれ！.mp3",
   "voice/スタート！.mp3"
 ];
+const gameBgmFile = "bgm/漢祭り.mp3";
 const introCueTimings = {
   step2: 1200,
   step3: 2600,
@@ -77,6 +78,8 @@ let currentIntroVoiceIndex = 0;
 let introStarted = false;
 let introAudioBlocked = false;
 let introAwaitingAudioGesture = false;
+let bgmAudio = null;
+let bgmShouldPlay = false;
 let shareButton = null;
 let shareStatus = null;
 
@@ -449,8 +452,67 @@ function playIntroVoice(index) {
     });
 }
 
+function loadBgm() {
+  if (bgmAudio) return;
+  bgmAudio = new Audio(gameBgmFile);
+  bgmAudio.preload = "auto";
+  bgmAudio.loop = true;
+  bgmAudio.volume = .62;
+}
+
+function unlockBgmFromGesture() {
+  loadBgm();
+  const originalVolume = bgmAudio.volume;
+  bgmAudio.muted = true;
+  bgmAudio.volume = .001;
+  bgmAudio.currentTime = 0;
+
+  const playPromise = bgmAudio.play();
+  if (playPromise && playPromise.then) {
+    playPromise
+      .then(() => {
+        if (bgmShouldPlay) return;
+        bgmAudio.pause();
+        bgmAudio.currentTime = 0;
+        bgmAudio.muted = false;
+        bgmAudio.volume = originalVolume;
+      })
+      .catch(() => {
+        bgmAudio.muted = false;
+        bgmAudio.volume = originalVolume;
+      });
+  } else {
+    bgmAudio.pause();
+    bgmAudio.currentTime = 0;
+    bgmAudio.muted = false;
+    bgmAudio.volume = originalVolume;
+  }
+}
+
+function playBgm() {
+  loadBgm();
+  bgmShouldPlay = true;
+  bgmAudio.muted = false;
+  bgmAudio.volume = .62;
+
+  const playPromise = bgmAudio.play();
+  if (playPromise && playPromise.catch) playPromise.catch(() => {});
+}
+
+function stopBgm(reset = false) {
+  bgmShouldPlay = false;
+  if (!bgmAudio) return;
+  bgmAudio.pause();
+  if (reset) bgmAudio.currentTime = 0;
+}
+
 function unlockAudioFromGesture() {
   unlockEffectAudioFromGesture();
+  if (bgmShouldPlay && running && !finished) {
+    playBgm();
+  } else {
+    unlockBgmFromGesture();
+  }
   initAudio();
   if (introStarted && introAwaitingAudioGesture && !introOverlay.classList.contains("is-hidden")) {
     introAwaitingAudioGesture = false;
@@ -504,6 +566,7 @@ function finishGame() {
   if (finished) return;
   finished = true;
   running = false;
+  stopBgm();
   game.classList.add("stage-finish");
   finishTemp.textContent = `${formatTemp(maxTemperature)}℃`;
 
@@ -532,6 +595,7 @@ function finishGame() {
 function addFriction(clientX, clientY, now) {
   if (!started || finished) return;
   initAudio();
+  if (bgmShouldPlay && bgmAudio && bgmAudio.paused) playBgm();
 
   if (!lastPoint) {
     lastPoint = { x: clientX, y: clientY };
@@ -639,6 +703,7 @@ function loop(now) {
 function restart() {
   clearIntroTimers();
   stopIntroVoices();
+  stopBgm(true);
   temperature = BASE_TEMP;
   maxTemperature = BASE_TEMP;
   power = 0;
@@ -802,6 +867,7 @@ function startRound() {
   introOverlay.classList.remove("needs-audio-start");
   started = true;
   running = true;
+  playBgm();
   lastPoint = null;
   lastDirection = 0;
   segmentTravel = 0;
