@@ -263,6 +263,7 @@
       }
 
       .work-card {
+        position: relative;
         min-width: 0;
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -272,12 +273,27 @@
       }
 
       .work-card.linked {
+        cursor: pointer;
         transition: transform 180ms ease, box-shadow 180ms ease;
       }
 
       .work-card.linked:hover {
         transform: translateY(-4px);
         box-shadow: 0 20px 40px rgba(50, 45, 66, 0.14);
+      }
+
+      .card-hitarea {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        border-radius: inherit;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .card-hitarea:focus-visible {
+        outline: 3px solid var(--accent-strong);
+        outline-offset: -4px;
       }
 
       .work-thumb {
@@ -335,6 +351,8 @@
       }
 
       .work-link {
+        position: relative;
+        z-index: 3;
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -581,6 +599,7 @@
 
           <div class="works-grid">
             <article class="work-card linked">
+              <a class="card-hitarea" href="/nobel_maze/" aria-label="Maze Game"></a>
               <div class="work-thumb">
                 <img src="maze.jpg" alt="文字迷路の赤ずきんの画面">
               </div>
@@ -595,6 +614,7 @@
             </article>
 
             <article class="work-card linked">
+              <a class="card-hitarea" href="/taion/" aria-label="Action Game"></a>
               <div class="work-thumb">
                 <img src="taion.jpg" alt="仮病だ！体温計を！こすれ！！の画面">
               </div>
@@ -609,6 +629,7 @@
             </article>
 
             <article class="work-card linked">
+              <a class="card-hitarea" href="/type_checker/" aria-label="Coming Soon"></a>
               <div class="work-thumb">
                 <div class="placeholder-thumb" role="img" aria-label="好みの顔タイプ診断 仮置き">
                   <div class="face-mark">?</div>
