@@ -15,7 +15,7 @@ const countdownText = document.getElementById("countdownText");
 const introOverlay = document.getElementById("introOverlay");
 const vignetteAd = document.getElementById("vignetteAd");
 const closeVignetteAdButton = document.getElementById("closeVignetteAdButton");
-const GAME_VERSION = "1.0.17";
+const GAME_VERSION = "1.0.18";
 const introVoiceFiles = [
   "voice/仮病だ.mp3",
   "voice/体温計を.mp3",
@@ -101,19 +101,6 @@ function formatTemp(value) {
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
-}
-
-function renderVersionBadge() {
-  let versionBadge = document.getElementById("versionBadge");
-  if (!versionBadge) {
-    versionBadge = document.createElement("div");
-    versionBadge.id = "versionBadge";
-    versionBadge.className = "version-badge";
-    versionBadge.setAttribute("aria-label", "Version");
-    game.appendChild(versionBadge);
-  }
-
-  versionBadge.textContent = `ver ${GAME_VERSION}`;
 }
 
 function renderShareControls() {
@@ -833,8 +820,6 @@ function drawFallbackScreenshot() {
   ctx.fillStyle = "#160d0d";
   ctx.font = "700 46px Arial, sans-serif";
   ctx.fillText(finishCopy.textContent, 540, 625);
-  ctx.font = "700 34px Arial, sans-serif";
-  ctx.fillText(`ver ${GAME_VERSION}`, 540, 710);
 
   return canvas;
 }
@@ -996,7 +981,6 @@ restartButton.addEventListener("click", restart);
 closeVignetteAdButton.addEventListener("click", closeVignetteAd);
 
 updateVisuals();
-renderVersionBadge();
 renderShareControls();
 runIntro();
 requestAnimationFrame(loop);
