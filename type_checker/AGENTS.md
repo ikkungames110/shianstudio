@@ -3,6 +3,7 @@
 - After making any file modification for the user, commit the change and push it to the configured Git remote.
 - If push is not possible, report the reason clearly and leave the working tree state explicit.
 - Keep generated face assets and their feature metadata in sync: image files live under `assets/`, and the corresponding feature records live under `data/`.
+- Do not show feature labels, tag names, arrows, or other scoring hints on the face choice cards during the quiz. The choice cards should present only the portrait images; `label` and `tags` are metadata for scoring and result generation, not in-quiz display text.
 
 ## Generated Face Asset Workflow
 

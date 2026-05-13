@@ -226,7 +226,6 @@
       padding: 8px;
       display: block;
       box-shadow: 0 10px 28px rgba(32, 29, 25, 0.08);
-      text-align: left;
     }
 
     .portrait {
@@ -237,35 +236,6 @@
       overflow: hidden;
       display: block;
       object-fit: cover;
-    }
-
-    .card-label {
-      min-height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .face-label {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .pick-mark {
-      flex: 0 0 auto;
-      width: 28px;
-      height: 28px;
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      border: 1px solid var(--line);
-      color: var(--accent);
-      font-weight: 900;
     }
 
     .result-layout {
@@ -379,10 +349,6 @@
 
       .face-card {
         padding: 7px;
-      }
-
-      .card-label {
-        font-size: 12px;
       }
 
       .bar-row {
@@ -569,22 +535,9 @@
       return faceSvg(face, variant, score);
     }
 
-    function faceSummary(face) {
-      return Object.entries(face.tags)
-        .filter(([key]) => TAGS[key])
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 2)
-        .map(([key]) => TAGS[key])
-        .join("・");
-    }
-
     function renderCard(el, face, side) {
       el.innerHTML = `
         ${renderPortrait(face, side === "left" ? 0 : 1)}
-        <span class="card-label">
-          <span class="face-label">${faceSummary(face)}</span>
-          <span class="pick-mark" aria-hidden="true">${side === "left" ? "←" : "→"}</span>
-        </span>
       `;
     }
 
