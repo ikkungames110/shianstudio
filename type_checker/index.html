@@ -230,7 +230,7 @@
 
     .portrait {
       width: 100%;
-      aspect-ratio: 1 / 1;
+      aspect-ratio: 3 / 4;
       border-radius: 6px;
       background: var(--soft);
       overflow: hidden;
@@ -448,6 +448,7 @@
     </section>
   </main>
 
+  <script src="data/female_faces.js"></script>
   <script src="data/male_faces.js"></script>
   <script>
     const TAGS = {
@@ -581,8 +582,9 @@
       state.gender = gender;
       state.round = 0;
       state.preference = Object.fromEntries(Object.keys(TAGS).map(key => [key, 0]));
+      const femaleAssetFaces = Array.isArray(window.FEMALE_FACE_ASSETS) ? window.FEMALE_FACE_ASSETS : femaleFaces;
       const maleAssetFaces = Array.isArray(window.MALE_FACE_ASSETS) ? window.MALE_FACE_ASSETS : maleFaces;
-      state.faces = gender === "female" ? femaleFaces : maleAssetFaces;
+      state.faces = gender === "female" ? femaleAssetFaces : maleAssetFaces;
       state.rounds = buildRounds(state.faces);
       topStatus.textContent = gender === "female" ? "女性を診断中" : "男性を診断中";
       show(quizScreen);
@@ -702,8 +704,9 @@
       if (event.key === "ArrowRight") choose(1);
     });
 
-    document.querySelector("#sampleA").innerHTML = faceSvg(femaleFaces[0]);
-    document.querySelector("#sampleB").innerHTML = faceSvg(femaleFaces[1], 1);
+    const sampleFaces = Array.isArray(window.FEMALE_FACE_ASSETS) ? window.FEMALE_FACE_ASSETS : femaleFaces;
+    document.querySelector("#sampleA").innerHTML = renderPortrait(sampleFaces[0]);
+    document.querySelector("#sampleB").innerHTML = renderPortrait(sampleFaces[1], 1);
   </script>
 </body>
 </html>
