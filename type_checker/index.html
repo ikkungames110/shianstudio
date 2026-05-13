@@ -226,6 +226,7 @@
       padding: 8px;
       display: block;
       box-shadow: 0 10px 28px rgba(32, 29, 25, 0.08);
+      text-align: left;
     }
 
     .portrait {
@@ -246,6 +247,13 @@
       gap: 8px;
       font-size: 13px;
       color: var(--muted);
+    }
+
+    .face-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .pick-mark {
@@ -482,8 +490,24 @@
       { id: "m06", label: "ミステリアス美形タイプ", palette: ["#d9b0a4", "#16191e", "#7f3d4c"], tags: { mysterious: .9, cool: .85, sharp: .85, tsurime: .8, adult: .65 } }
     ];
 
+    const DATASETS = {
+      female: {
+        label: "女性",
+        resultTarget: "女性顔",
+        assets: () => Array.isArray(window.FEMALE_FACE_ASSETS) ? window.FEMALE_FACE_ASSETS : femaleFaces,
+        resultCopy: (topA, topB) => `${topA}と${topB}の反応が強め。顔立ちそのものの整い方に加えて、目元の空気感や輪郭のやわらかさまで含めて「惹かれる女性像」を見ています。`
+      },
+      male: {
+        label: "男性",
+        resultTarget: "男性顔",
+        assets: () => Array.isArray(window.MALE_FACE_ASSETS) ? window.MALE_FACE_ASSETS : maleFaces,
+        resultCopy: (topA, topB) => `${topA}と${topB}の反応が強め。ぱっと見の華やかさより、目元や雰囲気に「自分だけが良さをわかっている」感を見つけると刺さる傾向です。`
+      }
+    };
+
     const state = {
       gender: null,
+      dataset: null,
       round: 0,
       faces: [],
       rounds: [],
@@ -545,9 +569,22 @@
       return faceSvg(face, variant, score);
     }
 
+    function faceSummary(face) {
+      return Object.entries(face.tags)
+        .filter(([key]) => TAGS[key])
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(([key]) => TAGS[key])
+        .join("・");
+    }
+
     function renderCard(el, face, side) {
       el.innerHTML = `
         ${renderPortrait(face, side === "left" ? 0 : 1)}
+        <span class="card-label">
+          <span class="face-label">${faceSummary(face)}</span>
+          <span class="pick-mark" aria-hidden="true">${side === "left" ? "←" : "→"}</span>
+        </span>
       `;
     }
 
@@ -580,13 +617,12 @@
 
     function start(gender) {
       state.gender = gender;
+      state.dataset = DATASETS[gender];
       state.round = 0;
       state.preference = Object.fromEntries(Object.keys(TAGS).map(key => [key, 0]));
-      const femaleAssetFaces = Array.isArray(window.FEMALE_FACE_ASSETS) ? window.FEMALE_FACE_ASSETS : femaleFaces;
-      const maleAssetFaces = Array.isArray(window.MALE_FACE_ASSETS) ? window.MALE_FACE_ASSETS : maleFaces;
-      state.faces = gender === "female" ? femaleAssetFaces : maleAssetFaces;
+      state.faces = state.dataset.assets().filter(face => face.gender === gender || !face.gender);
       state.rounds = buildRounds(state.faces);
-      topStatus.textContent = gender === "female" ? "女性を診断中" : "男性を診断中";
+      topStatus.textContent = `${state.dataset.label}を診断中`;
       show(quizScreen);
       renderRound();
     }
@@ -650,7 +686,7 @@
       const base = bestResultFace();
 
       resultTitle.textContent = title;
-      resultCopy.textContent = `${TAGS[topKeys[0]]}と${TAGS[topKeys[1]]}の反応が強め。ぱっと見の華やかさより、目元や雰囲気に「自分だけが良さをわかっている」感を見つけると刺さる傾向です。`;
+      resultCopy.textContent = state.dataset.resultCopy(TAGS[topKeys[0]], TAGS[topKeys[1]]);
       resultPortrait.innerHTML = renderPortrait(base, 2, state.preference);
       resultTags.innerHTML = scores.slice(0, 5).map(item => `<span class="tag">#${item.label}好き</span>`).join("");
       resultBars.innerHTML = scores.slice(0, 6).map(item => `
@@ -661,7 +697,7 @@
         </div>
       `).join("");
 
-      state.lastResult = `AI顔タイプ診断の結果: ${title}\n${scores.slice(0, 4).map(item => `#${item.label}好き`).join(" ")}`;
+      state.lastResult = `AI顔タイプ診断の結果(${state.dataset.resultTarget}): ${title}\n${scores.slice(0, 4).map(item => `#${item.label}好き`).join(" ")}`;
       topStatus.textContent = "診断完了";
       show(resultScreen);
     }
@@ -704,7 +740,7 @@
       if (event.key === "ArrowRight") choose(1);
     });
 
-    const sampleFaces = Array.isArray(window.FEMALE_FACE_ASSETS) ? window.FEMALE_FACE_ASSETS : femaleFaces;
+    const sampleFaces = DATASETS.female.assets();
     document.querySelector("#sampleA").innerHTML = renderPortrait(sampleFaces[0]);
     document.querySelector("#sampleB").innerHTML = renderPortrait(sampleFaces[1], 1);
   </script>
