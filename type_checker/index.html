@@ -126,7 +126,8 @@
     .primary-btn,
     .ghost-btn,
     .gender-btn,
-    .face-card {
+    .face-card,
+    .skip-btn {
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel);
@@ -160,9 +161,20 @@
       background: transparent;
     }
 
+    .skip-btn {
+      width: min(100%, 360px);
+      min-height: 48px;
+      padding: 0 18px;
+      justify-self: center;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
     .gender-btn:hover,
     .face-card:hover,
-    .ghost-btn:hover {
+    .ghost-btn:hover,
+    .skip-btn:hover {
       border-color: #9a9a9a;
       transform: translateY(-2px);
       box-shadow: var(--shadow);
@@ -375,8 +387,8 @@
     <section class="screen active" id="startScreen">
       <div class="hero">
         <div>
-          <h1>あなたが最も惹かれる顔</h1>
-          <p class="lead">2択を直感で選ぶだけ。好みの顔に含まれる特徴を重ねて、最後に「当たってる感」のあるタイプ名で返します。</p>
+          <h1>最後にあなたのタイプの顔が出ます</h1>
+          <p class="lead">2択を直感で選ぶだけ。好みの顔に含まれる特徴を重ねて、最後にあなたが惹かれる顔とタイプ名を表示します。</p>
           <div class="choice-row" aria-label="診断対象を選択">
             <button class="gender-btn" data-gender="female">女性を診断</button>
             <button class="gender-btn" data-gender="male">男性を診断</button>
@@ -394,7 +406,7 @@
         <div>
           <p class="micro" id="roundLabel">1 / 8</p>
           <h2>どっちがタイプ？</h2>
-          <p class="hint">タップ、または横スワイプで選択</p>
+          <p class="hint">タップ、横スワイプ、またはボタンで選択</p>
         </div>
         <div class="progress" aria-hidden="true">
           <div class="progress-bar" id="progressBar"></div>
@@ -403,6 +415,7 @@
           <button class="face-card" id="leftCard" aria-label="左の顔を選ぶ"></button>
           <button class="face-card" id="rightCard" aria-label="右の顔を選ぶ"></button>
         </div>
+        <button class="skip-btn" id="skipButton" type="button">どっちもタイプじゃない</button>
       </div>
     </section>
 
@@ -494,6 +507,7 @@
     const progressBar = document.querySelector("#progressBar");
     const leftCard = document.querySelector("#leftCard");
     const rightCard = document.querySelector("#rightCard");
+    const skipButton = document.querySelector("#skipButton");
     const duel = document.querySelector("#duel");
     const resultPortrait = document.querySelector("#resultPortrait");
     const resultTags = document.querySelector("#resultTags");
@@ -593,11 +607,7 @@
       renderCard(rightCard, pair[1], "right");
     }
 
-    function choose(index) {
-      const selected = state.rounds[state.round][index];
-      Object.entries(selected.tags).forEach(([key, value]) => {
-        state.preference[key] = (state.preference[key] || 0) + value;
-      });
+    function advanceRound() {
       state.round += 1;
 
       if (state.round >= state.rounds.length) {
@@ -607,6 +617,18 @@
       }
 
       renderRound();
+    }
+
+    function choose(index) {
+      const selected = state.rounds[state.round][index];
+      Object.entries(selected.tags).forEach(([key, value]) => {
+        state.preference[key] = (state.preference[key] || 0) + value;
+      });
+      advanceRound();
+    }
+
+    function skipRound() {
+      advanceRound();
     }
 
     function sortedScores() {
@@ -680,6 +702,7 @@
     });
     leftCard.addEventListener("click", () => choose(0));
     rightCard.addEventListener("click", () => choose(1));
+    skipButton.addEventListener("click", skipRound);
     document.querySelector("#restartButton").addEventListener("click", reset);
     document.querySelector("#shareButton").addEventListener("click", copyResult);
 
