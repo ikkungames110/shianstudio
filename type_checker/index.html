@@ -404,7 +404,7 @@
     <section class="screen" id="quizScreen">
       <div class="question">
         <div>
-          <p class="micro" id="roundLabel">1 / 8</p>
+          <p class="micro" id="roundLabel">0 / 20</p>
           <h2>どっちがタイプ？</h2>
           <p class="hint">タップ、横スワイプ、またはボタンで選択</p>
         </div>
@@ -455,6 +455,7 @@
       soft: "やわらかい",
       sharp: "シャープ"
     };
+    const TARGET_SELECTIONS = 20;
 
     const femaleFaces = [
       { id: "f01", label: "涼しげな切れ長タイプ", palette: ["#f2d7c8", "#2c2c34", "#a9425a"], tags: { cool: .9, tsurime: .9, adult: .7, mysterious: .6, sharp: .8 } },
@@ -493,6 +494,7 @@
       gender: null,
       dataset: null,
       round: 0,
+      selectedCount: 0,
       faces: [],
       rounds: [],
       preference: {},
@@ -587,10 +589,18 @@
       ];
     }
 
+    function currentPair() {
+      while (state.round >= state.rounds.length) {
+        state.rounds.push(...buildRounds(state.faces));
+      }
+      return state.rounds[state.round];
+    }
+
     function start(gender) {
       state.gender = gender;
       state.dataset = DATASETS[gender];
       state.round = 0;
+      state.selectedCount = 0;
       state.preference = Object.fromEntries(Object.keys(TAGS).map(key => [key, 0]));
       state.faces = state.dataset.assets().filter(face => face.gender === gender || !face.gender);
       state.rounds = buildRounds(state.faces);
@@ -600,17 +610,28 @@
     }
 
     function renderRound() {
-      const pair = state.rounds[state.round];
-      roundLabel.textContent = `${state.round + 1} / ${state.rounds.length}`;
-      progressBar.style.width = `${(state.round / state.rounds.length) * 100}%`;
+      const pair = currentPair();
+      roundLabel.textContent = `${state.selectedCount} / ${TARGET_SELECTIONS}`;
+      progressBar.style.width = `${(state.selectedCount / TARGET_SELECTIONS) * 100}%`;
       renderCard(leftCard, pair[0], "left");
       renderCard(rightCard, pair[1], "right");
     }
 
-    function advanceRound() {
+    function advancePair() {
+      state.round += 1;
+      renderRound();
+    }
+
+    function choose(index) {
+      const selected = currentPair()[index];
+      Object.entries(selected.tags).forEach(([key, value]) => {
+        state.preference[key] = (state.preference[key] || 0) + value;
+      });
+      state.selectedCount += 1;
       state.round += 1;
 
-      if (state.round >= state.rounds.length) {
+      if (state.selectedCount >= TARGET_SELECTIONS) {
+        roundLabel.textContent = `${TARGET_SELECTIONS} / ${TARGET_SELECTIONS}`;
         progressBar.style.width = "100%";
         renderResult();
         return;
@@ -619,16 +640,8 @@
       renderRound();
     }
 
-    function choose(index) {
-      const selected = state.rounds[state.round][index];
-      Object.entries(selected.tags).forEach(([key, value]) => {
-        state.preference[key] = (state.preference[key] || 0) + value;
-      });
-      advanceRound();
-    }
-
     function skipRound() {
-      advanceRound();
+      advancePair();
     }
 
     function sortedScores() {
