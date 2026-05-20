@@ -427,97 +427,6 @@
         background: rgba(255, 255, 255, 0.52);
       }
 
-      .game-art {
-        position: relative;
-        height: 100%;
-        display: grid;
-        place-items: center;
-        overflow: hidden;
-        isolation: isolate;
-        background:
-          linear-gradient(135deg, rgba(77, 95, 203, 0.16), transparent 44%),
-          linear-gradient(225deg, rgba(244, 189, 69, 0.22), transparent 48%),
-          #fff8ec;
-      }
-
-      .game-art::before,
-      .game-art::after {
-        content: "";
-        position: absolute;
-        z-index: -1;
-      }
-
-      .game-art::before {
-        inset: 18%;
-        border: 4px solid rgba(37, 35, 49, 0.72);
-        border-radius: 8px;
-        transform: rotate(-6deg);
-      }
-
-      .game-art::after {
-        width: 42%;
-        aspect-ratio: 1;
-        border: 4px solid rgba(37, 35, 49, 0.78);
-        border-radius: 8px;
-        background: var(--sun);
-        transform: translate(24%, 22%) rotate(8deg);
-        box-shadow: -80px -48px 0 -28px #dff4e6, 76px -64px 0 -22px #ffe6df;
-      }
-
-      .game-art span {
-        width: min(72%, 220px);
-        min-height: 92px;
-        display: grid;
-        place-items: center;
-        border: 4px solid rgba(37, 35, 49, 0.82);
-        border-radius: 8px;
-        color: var(--ink);
-        background: rgba(255, 255, 255, 0.8);
-        box-shadow: 0 14px 0 rgba(37, 35, 49, 0.16);
-        font-size: clamp(2.2rem, 6vw, 4.2rem);
-        font-weight: 900;
-        line-height: 1;
-      }
-
-      .game-art.number span {
-        background: #fff0bd;
-      }
-
-      .game-art.memory span {
-        background: #dff4e6;
-      }
-
-      .game-art.runner span {
-        color: #fff;
-        background: #252331;
-      }
-
-      .game-art.rhythm span {
-        background: #e5e9ff;
-      }
-
-      .game-art.word span {
-        background: #ffe6df;
-      }
-
-      .sheet-art {
-        height: 100%;
-        border-radius: inherit;
-        background-image: url("/assets/generated-game-thumbnails.png");
-        background-repeat: no-repeat;
-        background-size: 300% 300%;
-      }
-
-      .sheet-art.panel-1 { background-position: 0% 0%; }
-      .sheet-art.panel-2 { background-position: 50% 0%; }
-      .sheet-art.panel-3 { background-position: 100% 0%; }
-      .sheet-art.panel-4 { background-position: 0% 50%; }
-      .sheet-art.panel-5 { background-position: 50% 50%; }
-      .sheet-art.panel-6 { background-position: 100% 50%; }
-      .sheet-art.panel-7 { background-position: 0% 100%; }
-      .sheet-art.panel-8 { background-position: 50% 100%; }
-      .sheet-art.panel-9 { background-position: 100% 100%; }
-
       .about-band {
         background: #252331;
         color: #fff;
@@ -797,9 +706,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/color_drop/" aria-label="色あわせドロップ"></a>
               <div class="work-thumb">
-                <div class="game-art color" role="img" aria-label="色あわせドロップのサムネイル">
-                  <span>色</span>
-                </div>
+                <img src="/assets/thumbnails/color-drop.webp" alt="色あわせドロップのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -814,9 +721,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/number_rush/" aria-label="ナンバーラッシュ"></a>
               <div class="work-thumb">
-                <div class="game-art number" role="img" aria-label="ナンバーラッシュのサムネイル">
-                  <span>123</span>
-                </div>
+                <img src="/assets/thumbnails/number-rush.webp" alt="ナンバーラッシュのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -831,9 +736,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/shape_memory/" aria-label="かたちメモリー"></a>
               <div class="work-thumb">
-                <div class="game-art memory" role="img" aria-label="かたちメモリーのサムネイル">
-                  <span>◆</span>
-                </div>
+                <img src="/assets/thumbnails/shape-memory.webp" alt="かたちメモリーのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -848,9 +751,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/line_runner/" aria-label="ラインランナー"></a>
               <div class="work-thumb">
-                <div class="game-art runner" role="img" aria-label="ラインランナーのサムネイル">
-                  <span>▶</span>
-                </div>
+                <img src="/assets/thumbnails/line-runner.webp" alt="ラインランナーのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -865,9 +766,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/rhythm_switch/" aria-label="リズムスイッチ"></a>
               <div class="work-thumb">
-                <div class="game-art rhythm" role="img" aria-label="リズムスイッチのサムネイル">
-                  <span>♪</span>
-                </div>
+                <img src="/assets/thumbnails/rhythm-switch.webp" alt="リズムスイッチのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -882,9 +781,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/word_sort/" aria-label="ことば整列パズル"></a>
               <div class="work-thumb">
-                <div class="game-art word" role="img" aria-label="ことば整列パズルのサムネイル">
-                  <span>文</span>
-                </div>
+                <img src="/assets/thumbnails/word-sort.webp" alt="ことば整列パズルのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -899,7 +796,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/star_catcher/" aria-label="スターキャッチャー"></a>
               <div class="work-thumb">
-                <div class="sheet-art panel-1" role="img" aria-label="スターキャッチャーのイラスト"></div>
+                <img src="/assets/thumbnails/star-catcher.webp" alt="スターキャッチャーのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -914,7 +811,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/cloud_umbrella/" aria-label="くもアンブレラ"></a>
               <div class="work-thumb">
-                <div class="sheet-art panel-2" role="img" aria-label="くもアンブレラのイラスト"></div>
+                <img src="/assets/thumbnails/cloud-umbrella.webp" alt="くもアンブレラのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -929,7 +826,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/sushi_stack/" aria-label="すしタワー"></a>
               <div class="work-thumb">
-                <div class="sheet-art panel-3" role="img" aria-label="すしタワーのイラスト"></div>
+                <img src="/assets/thumbnails/sushi-stack.webp" alt="すしタワーのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -944,7 +841,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/candle_keeper/" aria-label="キャンドルキーパー"></a>
               <div class="work-thumb">
-                <div class="sheet-art panel-4" role="img" aria-label="キャンドルキーパーのイラスト"></div>
+                <img src="/assets/thumbnails/candle-keeper.webp" alt="キャンドルキーパーのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -959,7 +856,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/moon_hopper/" aria-label="ムーンホッパー"></a>
               <div class="work-thumb">
-                <div class="sheet-art panel-5" role="img" aria-label="ムーンホッパーのイラスト"></div>
+                <img src="/assets/thumbnails/moon-hopper.webp" alt="ムーンホッパーのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -974,7 +871,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/dot_connect/" aria-label="ドットコネクト"></a>
               <div class="work-thumb">
-                <div class="sheet-art panel-6" role="img" aria-label="ドットコネクトのイラスト"></div>
+                <img src="/assets/thumbnails/dot-connect.webp" alt="ドットコネクトのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -989,7 +886,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/snack_sorter/" aria-label="おやつ仕分け"></a>
               <div class="work-thumb">
-                <div class="sheet-art panel-7" role="img" aria-label="おやつ仕分けのイラスト"></div>
+                <img src="/assets/thumbnails/snack-sorter.webp" alt="おやつ仕分けのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -1004,7 +901,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/sleepy_alarm/" aria-label="ねむけアラーム"></a>
               <div class="work-thumb">
-                <div class="sheet-art panel-8" role="img" aria-label="ねむけアラームのイラスト"></div>
+                <img src="/assets/thumbnails/sleepy-alarm.webp" alt="ねむけアラームのサムネイル">
               </div>
               <div class="work-body">
                 <div>
@@ -1019,7 +916,7 @@
             <article class="work-card linked">
               <a class="card-hitarea" href="/treasure_route/" aria-label="宝の地図ルート"></a>
               <div class="work-thumb">
-                <div class="sheet-art panel-9" role="img" aria-label="宝の地図ルートのイラスト"></div>
+                <img src="/assets/thumbnails/treasure-route.webp" alt="宝の地図ルートのサムネイル">
               </div>
               <div class="work-body">
                 <div>

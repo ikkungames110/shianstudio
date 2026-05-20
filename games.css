@@ -280,37 +280,16 @@ canvas {
   height: 100%;
 }
 
-.generated-thumb,
-.generated-hero {
+.game-page-thumb {
   display: block;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background-image: url("/assets/generated-game-thumbnails.png");
-  background-repeat: no-repeat;
-  background-size: 300% 300%;
-  box-shadow: var(--shadow);
-}
-
-.generated-thumb {
-  width: 100%;
-  height: 100%;
-}
-
-.generated-hero {
   width: min(100%, 420px);
   aspect-ratio: 1;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: var(--shadow);
 }
-
-.panel-1 { background-position: 0% 0%; }
-.panel-2 { background-position: 50% 0%; }
-.panel-3 { background-position: 100% 0%; }
-.panel-4 { background-position: 0% 50%; }
-.panel-5 { background-position: 50% 50%; }
-.panel-6 { background-position: 100% 50%; }
-.panel-7 { background-position: 0% 100%; }
-.panel-8 { background-position: 50% 100%; }
-.panel-9 { background-position: 100% 100%; }
 
 .micro-stage {
   min-height: 360px;
