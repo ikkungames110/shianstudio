@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ブラウザゲームの作り方 | SHIAN STUDIO</title>
+    <meta name="description" content="SHIAN STUDIOが小さなブラウザゲームを作るときの流れ。企画、ルール設計、HTML/CSS/JavaScript実装、スマートフォン確認、公開前チェックをまとめています。">
+    <meta name="author" content="SHIAN STUDIO">
+    <link rel="canonical" href="https://shianstudio.com/how-to-make-games/">
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #252331;
+        --muted: #666174;
+        --paper: #fffdf7;
+        --panel: #ffffff;
+        --line: #e8e0d1;
+        --blue: #4d5fcb;
+        --red: #d94f5c;
+        --teal: #2b8a8f;
+        --yellow: #f4bd45;
+        --shadow: 0 16px 42px rgba(37, 35, 49, 0.1);
+        font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(135deg, rgba(77, 95, 203, 0.11), transparent 34%),
+          linear-gradient(225deg, rgba(244, 189, 69, 0.14), transparent 38%),
+          var(--paper);
+      }
+
+      a {
+        color: var(--blue);
+        font-weight: 800;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-bottom: 1px solid rgba(232, 224, 209, 0.92);
+        background: rgba(255, 253, 247, 0.9);
+        backdrop-filter: blur(14px);
+      }
+
+      .nav,
+      .page,
+      .footer-inner {
+        width: min(1080px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .nav {
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .brand,
+      .nav-links a,
+      .footer-links a {
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      .brand {
+        font-weight: 900;
+      }
+
+      .nav-links,
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .page {
+        padding: 54px 0 80px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+        gap: 34px;
+        align-items: center;
+        margin-bottom: 48px;
+      }
+
+      .eyebrow {
+        width: fit-content;
+        margin: 0 0 14px;
+        border: 1px solid rgba(77, 95, 203, 0.24);
+        border-radius: 999px;
+        padding: 7px 12px;
+        color: var(--blue);
+        background: rgba(255, 255, 255, 0.72);
+        font-size: 0.86rem;
+        font-weight: 900;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        max-width: 720px;
+        font-size: clamp(2.6rem, 8vw, 5.4rem);
+        line-height: 0.98;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin: 48px 0 16px;
+        border-top: 1px solid var(--line);
+        padding-top: 34px;
+        font-size: clamp(1.7rem, 4vw, 2.6rem);
+        line-height: 1.15;
+        letter-spacing: 0;
+      }
+
+      h3 {
+        font-size: 1.08rem;
+        line-height: 1.45;
+      }
+
+      .lead {
+        max-width: 720px;
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 1.08rem;
+        font-weight: 700;
+        line-height: 1.9;
+      }
+
+      .thumb-board {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .thumb-board img {
+        width: 100%;
+        aspect-ratio: 1;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        object-fit: cover;
+        background: #fff;
+        box-shadow: 0 12px 24px rgba(37, 35, 49, 0.08);
+      }
+
+      .intro-panel,
+      .step-card,
+      .note-card,
+      .example-card,
+      .check-panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: var(--shadow);
+      }
+
+      .intro-panel {
+        padding: 24px;
+      }
+
+      .intro-panel p,
+      .article p,
+      .article li {
+        color: var(--muted);
+        font-weight: 700;
+        line-height: 1.9;
+      }
+
+      .article ul,
+      .article ol {
+        margin: 12px 0 0;
+        padding-left: 1.35em;
+      }
+
+      .article li + li {
+        margin-top: 8px;
+      }
+
+      .steps-grid,
+      .notes-grid,
+      .examples-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .steps-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .notes-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .examples-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .step-card,
+      .note-card,
+      .example-card,
+      .check-panel {
+        min-width: 0;
+        padding: 20px;
+      }
+
+      .step-number {
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        color: #fff;
+        background: var(--blue);
+        font-weight: 900;
+      }
+
+      .step-card p,
+      .note-card p,
+      .example-card p {
+        margin-top: 10px;
+        font-size: 0.94rem;
+      }
+
+      .note-card strong {
+        color: var(--ink);
+      }
+
+      .example-card {
+        display: grid;
+        grid-template-columns: 74px minmax(0, 1fr);
+        gap: 14px;
+        align-items: center;
+        text-decoration: none;
+      }
+
+      .example-card img {
+        width: 74px;
+        height: 74px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid var(--line);
+      }
+
+      .example-card span {
+        display: block;
+        color: var(--teal);
+        font-size: 0.78rem;
+        font-weight: 900;
+      }
+
+      .example-card h3 {
+        color: var(--ink);
+        font-size: 1rem;
+      }
+
+      .check-panel {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 26px;
+      }
+
+      .check-panel li {
+        break-inside: avoid;
+      }
+
+      .template-box {
+        margin-top: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+        color: var(--ink);
+        background: #fff;
+        font-weight: 800;
+        line-height: 1.9;
+      }
+
+      .template-box code {
+        color: var(--blue);
+        font-family: "Yu Gothic", "Meiryo", system-ui, sans-serif;
+        font-weight: 900;
+      }
+
+      .site-footer {
+        border-top: 1px solid var(--line);
+        padding: 26px 0;
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      @media (max-width: 900px) {
+        .hero,
+        .check-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .steps-grid,
+        .notes-grid,
+        .examples-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .nav,
+        .footer-inner {
+          align-items: flex-start;
+          flex-direction: column;
+          padding: 14px 0;
+        }
+
+        .page {
+          width: min(100% - 24px, 1080px);
+          padding-top: 34px;
+        }
+
+        .steps-grid,
+        .notes-grid,
+        .examples-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .example-card {
+          grid-template-columns: 64px minmax(0, 1fr);
+        }
+
+        .example-card img {
+          width: 64px;
+          height: 64px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="メインナビゲーション">
+        <a class="brand" href="/">SHIAN STUDIO</a>
+        <div class="nav-links">
+          <a href="/">Home</a>
+          <a href="/#works">Works</a>
+          <a href="/contact.html">Contact</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="page article">
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Making Notes</p>
+          <h1 id="page-title">ブラウザゲームの作り方</h1>
+          <p class="lead">
+            SHIAN STUDIOでは、短い時間で遊び方が伝わり、スマートフォンでも最後まで遊べる小さなブラウザゲームを制作しています。
+            ここでは、企画から公開前チェックまで、実際にゲームを増やすときの考え方をまとめます。
+          </p>
+        </div>
+        <div class="thumb-board" aria-label="制作したゲームのサムネイル">
+          <img src="/assets/thumbnails/color-drop.webp" alt="色あわせドロップのイラスト">
+          <img src="/assets/thumbnails/shape-memory.webp" alt="かたちメモリーのイラスト">
+          <img src="/assets/thumbnails/star-catcher.webp" alt="スターキャッチャーのイラスト">
+          <img src="/assets/thumbnails/treasure-route.webp" alt="宝の地図ルートのイラスト">
+        </div>
+      </section>
+
+      <section class="intro-panel" aria-label="ページの概要">
+        <p>
+          このページは、一般的なプログラミング講座ではなく、このサイトの作品を作るときの制作メモです。
+          ルールを小さく決める、画面で迷わせない、公開後に説明や注意事項を整える、という順番を重視しています。
+        </p>
+      </section>
+
+      <h2>制作の流れ</h2>
+      <div class="steps-grid">
+        <section class="step-card">
+          <div class="step-number">1</div>
+          <h3>一文で遊びを決める</h3>
+          <p>「同じ色で止める」「光った場所を押す」のように、初めて見た人でも想像できる行動へ絞ります。</p>
+        </section>
+        <section class="step-card">
+          <div class="step-number">2</div>
+          <h3>30秒で試作する</h3>
+          <p>点数、時間、失敗条件を仮で入れ、面白いかどうかを先に確認します。</p>
+        </section>
+        <section class="step-card">
+          <div class="step-number">3</div>
+          <h3>操作を固定する</h3>
+          <p>タップ、クリック、方向キーなど、遊ぶために必要な入力を少なくします。</p>
+        </section>
+        <section class="step-card">
+          <div class="step-number">4</div>
+          <h3>難易度を整える</h3>
+          <p>最初は成功しやすく、慣れるとスコアを伸ばせるように速度や判定幅を調整します。</p>
+        </section>
+        <section class="step-card">
+          <div class="step-number">5</div>
+          <h3>説明を添えて公開する</h3>
+          <p>遊び方、制作意図、注意事項、推奨環境をページ内に置き、ゲームだけで終わらない形にします。</p>
+        </section>
+      </div>
+
+      <h2>企画時に決めること</h2>
+      <div class="notes-grid">
+        <section class="note-card">
+          <h3>目的</h3>
+          <p><strong>何をしたら成功か</strong>を最初に決めます。迷路ならゴール、仕分けなら正しい箱、タイミングゲームなら判定ゾーンです。</p>
+        </section>
+        <section class="note-card">
+          <h3>制限</h3>
+          <p><strong>時間、回数、ミス数</strong>のどれかを入れると、短いゲームでも緊張感が出ます。</p>
+        </section>
+        <section class="note-card">
+          <h3>結果</h3>
+          <p><strong>スコアやランク</strong>を表示し、もう一度試す理由を作ります。結果は読めば意味が分かる言葉にします。</p>
+        </section>
+      </div>
+
+      <h2>実装の基本方針</h2>
+      <p>
+        このサイトの小さなゲームは、主にHTML、CSS、JavaScriptで作っています。ページを開けばすぐ遊べることを優先し、
+        ログインや複雑な通信を必要としない構成にしています。スマートフォンではタップ操作、パソコンではキーボードやクリックでも遊べるようにします。
+      </p>
+      <ul>
+        <li>ゲーム画面、操作ボタン、スコア、メッセージの位置を先に決める。</li>
+        <li>プレイ開始、成功、失敗、リスタートの状態を分けて実装する。</li>
+        <li>スコア計算や当たり判定は、短いプレイで納得できる単純なルールにする。</li>
+        <li>音が出なくても遊べるよう、視覚的な変化で状況が分かるようにする。</li>
+      </ul>
+
+      <h2>画面づくりで見ていること</h2>
+      <p>
+        ゲームはルールだけでなく、画面の読みやすさで遊びやすさが変わります。特にスマートフォンでは、ボタンが小さすぎる、
+        テキストが詰まる、スコアが見えない、といった問題が起きやすいため、公開前に幅の狭い画面でも確認します。
+      </p>
+      <ul>
+        <li>主要ボタンは指で押しやすい高さにする。</li>
+        <li>長い説明をゲーム画面の中に詰め込まず、本文エリアに分ける。</li>
+        <li>スコア、残り時間、状態メッセージの表示位置を固定する。</li>
+        <li>文字がボタンやカードからはみ出さないよう、短い文言を使う。</li>
+      </ul>
+
+      <h2>イラストとサムネイル</h2>
+      <p>
+        サムネイルは、ゲームの内容を一目で伝えるための入口です。文字を入れすぎると小さい画面で読みにくくなるため、
+        このサイトでは色、形、場面で内容が伝わるイラストを使います。トップページで並べたときに似すぎないよう、ゲームごとに構図と色を変えています。
+      </p>
+
+      <h2>公開前チェック</h2>
+      <ul class="check-panel">
+        <li>タイトルと説明文が、ゲーム内容と一致している。</li>
+        <li>canonical URLが本番URLになっている。</li>
+        <li>スマートフォン幅でも文字やボタンが重ならない。</li>
+        <li>開始、リスタート、ゲーム終了が正常に動く。</li>
+        <li>画像パス、CSS、JavaScriptの読み込みに失敗していない。</li>
+        <li>sitemap.xmlに新しいページを追加している。</li>
+        <li>古い検証用ページが検索対象にならないよう整理している。</li>
+        <li>お問い合わせ、利用規約、プライバシーポリシーへ辿れる。</li>
+      </ul>
+
+      <h2>このサイトの制作例</h2>
+      <div class="examples-grid" aria-label="制作例">
+        <a class="example-card" href="/color_drop/">
+          <img src="/assets/thumbnails/color-drop.webp" alt="">
+          <div><span>Timing</span><h3>色あわせドロップ</h3><p>指定色と一致した瞬間を狙う反応ゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/number_rush/">
+          <img src="/assets/thumbnails/number-rush.webp" alt="">
+          <div><span>Search</span><h3>ナンバーラッシュ</h3><p>数字を順番に探して押す視線移動ゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/shape_memory/">
+          <img src="/assets/thumbnails/shape-memory.webp" alt="">
+          <div><span>Memory</span><h3>かたちメモリー</h3><p>伏せたカードから同じ形をそろえる記憶ゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/line_runner/">
+          <img src="/assets/thumbnails/line-runner.webp" alt="">
+          <div><span>Action</span><h3>ラインランナー</h3><p>レーンを切り替えて障害物を避けるゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/rhythm_switch/">
+          <img src="/assets/thumbnails/rhythm-switch.webp" alt="">
+          <div><span>Timing</span><h3>リズムスイッチ</h3><p>判定ゾーンに入った瞬間を押す目押しゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/word_sort/">
+          <img src="/assets/thumbnails/word-sort.webp" alt="">
+          <div><span>Reading</span><h3>ことば整列パズル</h3><p>言葉のかけらを自然な順番に並べるパズル。</p></div>
+        </a>
+        <a class="example-card" href="/star_catcher/">
+          <img src="/assets/thumbnails/star-catcher.webp" alt="">
+          <div><span>Action</span><h3>スターキャッチャー</h3><p>落ちてくる星を集めるレーン移動ゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/cloud_umbrella/">
+          <img src="/assets/thumbnails/cloud-umbrella.webp" alt="">
+          <div><span>Avoid</span><h3>くもアンブレラ</h3><p>左右へ動いて雨粒を避ける回避ゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/sushi_stack/">
+          <img src="/assets/thumbnails/sushi-stack.webp" alt="">
+          <div><span>Balance</span><h3>すしタワー</h3><p>動く土台へタイミングよく積み上げるゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/candle_keeper/">
+          <img src="/assets/thumbnails/candle-keeper.webp" alt="">
+          <div><span>React</span><h3>キャンドルキーパー</h3><p>風の方向を見て小さな火を守る反応ゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/moon_hopper/">
+          <img src="/assets/thumbnails/moon-hopper.webp" alt="">
+          <div><span>Choice</span><h3>ムーンホッパー</h3><p>光った月を選んでジャンプをつなぐゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/dot_connect/">
+          <img src="/assets/thumbnails/dot-connect.webp" alt="">
+          <div><span>Order</span><h3>ドットコネクト</h3><p>ノードを順番につないで回路を完成させるパズル。</p></div>
+        </a>
+        <a class="example-card" href="/snack_sorter/">
+          <img src="/assets/thumbnails/snack-sorter.webp" alt="">
+          <div><span>Sort</span><h3>おやつ仕分け</h3><p>出てくるおやつを形ごとの箱へ入れる分類ゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/sleepy_alarm/">
+          <img src="/assets/thumbnails/sleepy-alarm.webp" alt="">
+          <div><span>Timing</span><h3>ねむけアラーム</h3><p>中央のゾーンに入った瞬間にベルを鳴らすゲーム。</p></div>
+        </a>
+        <a class="example-card" href="/treasure_route/">
+          <img src="/assets/thumbnails/treasure-route.webp" alt="">
+          <div><span>Route</span><h3>宝の地図ルート</h3><p>方向指示を順番に確認して進むパズル。</p></div>
+        </a>
+      </div>
+
+      <h2>新しいゲームを足すときのテンプレート</h2>
+      <p>
+        新しい作品を作るときは、最初に下の項目を埋めます。これを決めてから画面を作ると、途中でルールがぶれにくくなります。
+      </p>
+      <div class="template-box">
+        <div><code>ゲーム名:</code> ひと目で内容が伝わる短い名前</div>
+        <div><code>一文ルール:</code> プレイヤーが何をするゲームか</div>
+        <div><code>成功条件:</code> スコア、ゴール、正解数など</div>
+        <div><code>失敗条件:</code> 時間切れ、ミス、判定外の操作など</div>
+        <div><code>操作方法:</code> タップ、クリック、キー入力のどれを使うか</div>
+        <div><code>公開時の説明:</code> 遊び方、制作意図、注意事項</div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <span>© SHIAN STUDIO</span>
+        <nav class="footer-links" aria-label="フッターナビゲーション">
+          <a href="/">Home</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+          <a href="/contact.html">Contact</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>
