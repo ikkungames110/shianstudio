@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ドットコネクト | SHIAN STUDIO</title>
+  <meta name="description" content="ドットコネクトは、光るノードを指定された順番でつないで回路を完成させるブラウザパズルです。順番記憶と確認力を使います。">
+  <meta name="author" content="SHIAN STUDIO">
+  <link rel="canonical" href="https://shianstudio.com/dot_connect/">
+  <link rel="stylesheet" href="../games.css">
+</head>
+<body>
+  <header class="site-header"><nav class="nav" aria-label="メインナビゲーション"><a class="brand" href="/">SHIAN STUDIO</a><div class="nav-links"><a href="/">Home</a><a href="/privacy.html">Privacy</a><a href="/contact.html">Contact</a></div></nav></header>
+  <main class="page">
+    <div class="game-layout">
+      <section class="game-panel" aria-labelledby="game-title">
+        <div class="game-head"><div><p class="game-kicker">Sequence Puzzle</p><h1 id="game-title">ドットコネクト</h1><p class="lead">画面に並ぶノードを、表示された番号の順番に押して回路を完成させます。</p></div><div class="stats" aria-live="polite"><div class="stat"><span>Score</span><strong id="score">0</strong></div><div class="stat"><span>Step</span><strong id="goal">1/5</strong></div><div class="stat"><span>Mode</span><strong id="time">順番</strong></div></div></div>
+        <div class="playfield"><div class="generated-hero panel-6" role="img" aria-label="ドットコネクトのイラスト"></div><div id="gameMount"></div><p class="message" id="message">スタートで開始</p></div>
+        <div class="controls"><button class="primary-btn" id="startButton" type="button">新しい回路</button><button class="ghost-btn" id="resetButton" type="button">リセット</button></div>
+      </section>
+      <aside class="side-panel"><h2>遊び方</h2><ul><li>ノードに表示された順番を見ます。</li><li>1から順番に押します。</li><li>間違えると最初からつなぎ直しです。</li></ul><p>すばやさよりも、順番を落ち着いて確認するパズルです。</p></aside>
+    </div>
+    <section class="notes" aria-labelledby="notes-title"><h2 id="notes-title">制作メモ</h2><div class="note-grid"><section class="note-card"><h3>回路を作る感覚</h3><p>点を押していく操作だけで、線をつないでいるような気持ちよさを目指しました。</p></section><section class="note-card"><h3>毎回変わる順番</h3><p>新しい回路を押すたびに順番が変わるため、同じ配置でも確認が必要です。</p></section><section class="note-card"><h3>注意事項</h3><p>結果は保存されません。個人情報の入力もありません。</p></section></div></section>
+  </main>
+  <footer class="site-footer"><div class="footer-inner"><span>© SHIAN STUDIO</span><nav class="footer-links" aria-label="フッターナビゲーション"><a href="/">Home</a><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/contact.html">Contact</a></nav></div></footer>
+  <script>window.SHIA_GAME_CONFIG = { mode: "connect" };</script>
+  <script src="../micro_games.js"></script>
+</body>
+</html>

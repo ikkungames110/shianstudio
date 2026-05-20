@@ -280,6 +280,235 @@ canvas {
   height: 100%;
 }
 
+.generated-thumb,
+.generated-hero {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background-image: url("/assets/generated-game-thumbnails.png");
+  background-repeat: no-repeat;
+  background-size: 300% 300%;
+  box-shadow: var(--shadow);
+}
+
+.generated-thumb {
+  width: 100%;
+  height: 100%;
+}
+
+.generated-hero {
+  width: min(100%, 420px);
+  aspect-ratio: 1;
+}
+
+.panel-1 { background-position: 0% 0%; }
+.panel-2 { background-position: 50% 0%; }
+.panel-3 { background-position: 100% 0%; }
+.panel-4 { background-position: 0% 50%; }
+.panel-5 { background-position: 50% 50%; }
+.panel-6 { background-position: 100% 50%; }
+.panel-7 { background-position: 0% 100%; }
+.panel-8 { background-position: 50% 100%; }
+.panel-9 { background-position: 100% 100%; }
+
+.micro-stage {
+  min-height: 360px;
+  display: grid;
+  gap: 16px;
+  align-content: center;
+}
+
+.micro-board {
+  position: relative;
+  min-height: 320px;
+  overflow: hidden;
+  border: 3px solid #252331;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(77, 95, 203, .14), transparent 38%),
+    linear-gradient(225deg, rgba(244, 189, 69, .18), transparent 42%),
+    #fff8ec;
+}
+
+.micro-lanes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  min-height: 320px;
+}
+
+.micro-lane {
+  border-right: 1px solid rgba(37, 35, 49, .16);
+}
+
+.micro-lane:last-child {
+  border-right: 0;
+}
+
+.micro-player,
+.micro-item {
+  position: absolute;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 70px;
+  height: 70px;
+  border: 3px solid #252331;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 0 rgba(37, 35, 49, .18);
+  font-size: 36px;
+  font-weight: 900;
+  transform: translateX(-50%);
+}
+
+.micro-player {
+  bottom: 14px;
+  background: #dff4e6;
+}
+
+.micro-item {
+  top: 0;
+  background: #fff0bd;
+}
+
+.micro-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.micro-choice,
+.micro-action {
+  min-height: 48px;
+  border: 2px solid #252331;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #252331;
+  background: #fff;
+  box-shadow: 0 5px 0 rgba(37, 35, 49, .16);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.micro-choice.active,
+.micro-action.active {
+  color: #fff;
+  background: var(--blue);
+}
+
+.stack-stage {
+  min-height: 340px;
+  position: relative;
+  overflow: hidden;
+  border: 3px solid #252331;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #fff6d8, #f3e5cf);
+}
+
+.stack-piece {
+  position: absolute;
+  height: 34px;
+  border: 3px solid #252331;
+  border-radius: 8px;
+  background: #f4bd45;
+  box-shadow: 0 6px 0 rgba(37, 35, 49, .16);
+}
+
+.node-board {
+  position: relative;
+  min-height: 360px;
+  border: 3px solid #252331;
+  border-radius: 8px;
+  background: #11253a;
+}
+
+.node-button {
+  position: absolute;
+  width: 58px;
+  height: 58px;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  color: #11253a;
+  background: #f4bd45;
+  cursor: pointer;
+  font-weight: 900;
+  transform: translate(-50%, -50%);
+}
+
+.node-button.done {
+  background: #3d8b5f;
+}
+
+.sort-item {
+  min-height: 110px;
+  display: grid;
+  place-items: center;
+  border: 3px solid #252331;
+  border-radius: 8px;
+  background: #fff8e6;
+  font-size: clamp(3rem, 10vw, 6rem);
+  box-shadow: 0 8px 0 rgba(37, 35, 49, .16);
+}
+
+.timing-track {
+  position: relative;
+  height: 96px;
+  border: 3px solid #252331;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #ffe6df, #dff4e6 44% 56%, #ffe6df);
+}
+
+.timing-zone {
+  position: absolute;
+  left: 44%;
+  top: 10px;
+  bottom: 10px;
+  width: 12%;
+  border: 3px dashed #252331;
+  border-radius: 8px;
+  background: rgba(61, 139, 95, .2);
+}
+
+.timing-marker {
+  position: absolute;
+  top: 50%;
+  width: 54px;
+  height: 54px;
+  border: 3px solid #252331;
+  border-radius: 50%;
+  background: #f4bd45;
+  transform: translate(-50%, -50%);
+}
+
+.route-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.route-cell {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 2px solid #252331;
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 900;
+}
+
+.route-cell.active {
+  color: #fff;
+  background: var(--blue);
+}
+
+.route-cell.goal {
+  background: #fff0bd;
+}
+
 @media (max-width: 920px) {
   .game-layout,
   .note-grid {

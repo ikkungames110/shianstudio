@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>すしタワー | SHIAN STUDIO</title>
+  <meta name="description" content="すしタワーは、左右に動く寿司をタイミングよく落として高く積むブラウザゲームです。ズレるほど足場が小さくなります。">
+  <meta name="author" content="SHIAN STUDIO">
+  <link rel="canonical" href="https://shianstudio.com/sushi_stack/">
+  <link rel="stylesheet" href="../games.css">
+</head>
+<body>
+  <header class="site-header"><nav class="nav" aria-label="メインナビゲーション"><a class="brand" href="/">SHIAN STUDIO</a><div class="nav-links"><a href="/">Home</a><a href="/privacy.html">Privacy</a><a href="/contact.html">Contact</a></div></nav></header>
+  <main class="page">
+    <div class="game-layout">
+      <section class="game-panel" aria-labelledby="game-title">
+        <div class="game-head"><div><p class="game-kicker">Stacking Game</p><h1 id="game-title">すしタワー</h1><p class="lead">横に動く寿司をタイミングよく落とし、できるだけ高いタワーを作ります。</p></div><div class="stats" aria-live="polite"><div class="stat"><span>Score</span><strong id="score">0</strong></div><div class="stat"><span>Goal</span><strong id="goal">0段</strong></div><div class="stat"><span>Time</span><strong id="time">40</strong></div></div></div>
+        <div class="playfield"><div class="generated-hero panel-3" role="img" aria-label="すしタワーのイラスト"></div><div id="gameMount"></div><p class="message" id="message">スタートで開始</p></div>
+        <div class="controls"><button class="primary-btn" id="startButton" type="button">スタート</button><button class="ghost-btn" id="resetButton" type="button">リセット</button></div>
+      </section>
+      <aside class="side-panel"><h2>遊び方</h2><ul><li>動いている寿司をクリックまたはスペースキーで落とします。</li><li>下の寿司と重なった部分だけが残ります。</li><li>細くなりすぎると崩れます。</li></ul><p>欲張って高く積むほど難しくなる、タイミング重視のゲームです。</p></aside>
+    </div>
+    <section class="notes" aria-labelledby="notes-title"><h2 id="notes-title">制作メモ</h2><div class="note-grid"><section class="note-card"><h3>ズレが次に残る</h3><p>一度の失敗が次の足場の小ささにつながるため、短い操作に緊張感があります。</p></section><section class="note-card"><h3>繰り返しやすい</h3><p>ルールは一つだけなので、前回より1段高く積む目標を作れます。</p></section><section class="note-card"><h3>注意事項</h3><p>ゲーム内の寿司はイラスト表現です。実在の商品や店舗とは関係ありません。</p></section></div></section>
+  </main>
+  <footer class="site-footer"><div class="footer-inner"><span>© SHIAN STUDIO</span><nav class="footer-links" aria-label="フッターナビゲーション"><a href="/">Home</a><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/contact.html">Contact</a></nav></div></footer>
+  <script>window.SHIA_GAME_CONFIG = { mode: "stack", colors: ["#f36f61", "#f4bd45", "#fff4db", "#2b8a8f"] };</script>
+  <script src="../micro_games.js"></script>
+</body>
+</html>
