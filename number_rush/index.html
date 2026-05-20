@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ナンバーラッシュ | SHIAN STUDIO</title>
+  <meta name="description" content="ナンバーラッシュは、シャッフルされた数字を1から順番に押していくブラウザゲームです。視線移動と判断速度を短時間で試せます。">
+  <meta name="author" content="SHIAN STUDIO">
+  <link rel="canonical" href="https://shianstudio.com/number_rush/">
+  <link rel="stylesheet" href="../games.css">
+  <style>
+    .number-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    .number-cell {
+      aspect-ratio: 1;
+      border: 3px solid #252331;
+      border-radius: 8px;
+      color: #252331;
+      background: #fff;
+      box-shadow: 0 8px 0 rgba(37, 35, 49, .18);
+      cursor: pointer;
+      font-size: clamp(1.9rem, 7vw, 4.2rem);
+      font-weight: 900;
+      line-height: 1;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    .number-cell:hover {
+      transform: translateY(-2px);
+    }
+
+    .number-cell.done {
+      color: #fff;
+      background: var(--green);
+      transform: scale(.96);
+      opacity: .78;
+    }
+
+    .number-cell.wrong {
+      background: var(--red);
+      color: #fff;
+      animation: shake 160ms linear;
+    }
+
+    .goal-box {
+      display: grid;
+      place-items: center;
+      min-height: 76px;
+      margin: 0 auto 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff8e6;
+      color: #252331;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .goal-box strong {
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      line-height: 1;
+    }
+
+    @keyframes shake {
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="メインナビゲーション">
+      <a class="brand" href="/">SHIAN STUDIO</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/contact.html">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div class="game-layout">
+      <section class="game-panel" aria-labelledby="game-title">
+        <div class="game-head">
+          <div>
+            <p class="game-kicker">Speed Search Game</p>
+            <h1 id="game-title">ナンバーラッシュ</h1>
+            <p class="lead">数字を1から順番に探して押します。配置はラウンドごとに変わります。</p>
+          </div>
+          <div class="stats" aria-live="polite">
+            <div class="stat"><span>Score</span><strong id="score">0</strong></div>
+            <div class="stat"><span>Next</span><strong id="next">1</strong></div>
+            <div class="stat"><span>Time</span><strong id="time">35</strong></div>
+          </div>
+        </div>
+
+        <div class="playfield">
+          <div class="goal-box">
+            <div>
+              <span>次に押す数字</span>
+              <strong id="goalNumber">1</strong>
+            </div>
+          </div>
+          <div class="number-board" id="board" aria-label="数字ボード"></div>
+          <p class="message" id="message">スタートで開始</p>
+        </div>
+
+        <div class="controls">
+          <button class="primary-btn" id="startButton" type="button">スタート</button>
+          <button class="ghost-btn" id="resetButton" type="button">リセット</button>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <h2>遊び方</h2>
+        <ul>
+          <li>1から16まで順番に押します。</li>
+          <li>16まで押すと次のラウンドに進みます。</li>
+          <li>間違えると少し時間が減ります。</li>
+        </ul>
+        <p>数字を探す目の動きと、押す順番を保つ集中力を使うゲームです。</p>
+      </aside>
+    </div>
+
+    <section class="notes" aria-labelledby="notes-title">
+      <h2 id="notes-title">制作メモ</h2>
+      <div class="note-grid">
+        <section class="note-card">
+          <h3>毎回違う配置</h3>
+          <p>ラウンドごとに数字をシャッフルするため、位置を暗記するだけではなく視線移動が必要になります。</p>
+        </section>
+        <section class="note-card">
+          <h3>短時間の集中</h3>
+          <p>35秒でどれだけラウンドを進められるかを測ります。長時間遊ばなくても結果が出る設計です。</p>
+        </section>
+        <section class="note-card">
+          <h3>注意事項</h3>
+          <p>連打よりも順番の確認が大切です。タップ反応が遅い場合は、他のアプリを閉じてから試してください。</p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>© SHIAN STUDIO</span>
+      <nav class="footer-links" aria-label="フッターナビゲーション">
+        <a href="/">Home</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/contact.html">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    const board = document.querySelector("#board");
+    const scoreEl = document.querySelector("#score");
+    const nextEl = document.querySelector("#next");
+    const timeEl = document.querySelector("#time");
+    const goalNumber = document.querySelector("#goalNumber");
+    const message = document.querySelector("#message");
+    const startButton = document.querySelector("#startButton");
+    const resetButton = document.querySelector("#resetButton");
+
+    let target = 1;
+    let score = 0;
+    let timeLeft = 35;
+    let running = false;
+    let timer = null;
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function renderBoard() {
+      board.innerHTML = "";
+      shuffle(Array.from({ length: 16 }, (_, index) => index + 1)).forEach((number) => {
+        const button = document.createElement("button");
+        button.className = "number-cell";
+        button.type = "button";
+        button.textContent = number;
+        button.dataset.number = number;
+        button.setAttribute("aria-label", `${number}を押す`);
+        button.addEventListener("click", () => choose(button, number));
+        board.append(button);
+      });
+    }
+
+    function render() {
+      scoreEl.textContent = score;
+      nextEl.textContent = target;
+      goalNumber.textContent = target;
+      timeEl.textContent = Math.max(0, Math.ceil(timeLeft));
+    }
+
+    function choose(button, number) {
+      if (!running) return;
+      if (number === target) {
+        button.classList.add("done");
+        button.disabled = true;
+        score += 5 + target;
+        target += 1;
+        message.textContent = target <= 16 ? `${target}を探してください` : "ラウンドクリア";
+        if (target > 16) {
+          score += 50;
+          target = 1;
+          renderBoard();
+          message.textContent = "次のラウンドです";
+        }
+      } else {
+        timeLeft = Math.max(0, timeLeft - 1.5);
+        button.classList.add("wrong");
+        window.setTimeout(() => button.classList.remove("wrong"), 180);
+        message.textContent = `${target}から押してください`;
+      }
+      render();
+    }
+
+    function tick() {
+      timeLeft -= 0.1;
+      if (timeLeft <= 0) {
+        timeLeft = 0;
+        running = false;
+        clearInterval(timer);
+        message.textContent = `終了。スコアは${score}です`;
+      }
+      render();
+    }
+
+    function start() {
+      clearInterval(timer);
+      target = 1;
+      score = 0;
+      timeLeft = 35;
+      running = true;
+      renderBoard();
+      render();
+      message.textContent = "1から順番に押してください";
+      timer = setInterval(tick, 100);
+    }
+
+    function reset() {
+      clearInterval(timer);
+      target = 1;
+      score = 0;
+      timeLeft = 35;
+      running = false;
+      renderBoard();
+      render();
+      message.textContent = "スタートで開始";
+    }
+
+    startButton.addEventListener("click", start);
+    resetButton.addEventListener("click", reset);
+
+    reset();
+  </script>
+</body>
+</html>

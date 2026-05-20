@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>かたちメモリー | SHIAN STUDIO</title>
+  <meta name="description" content="かたちメモリーは、伏せられた図形カードをめくって同じ形をそろえるブラウザゲームです。記憶力と観察力を短時間で試せます。">
+  <meta name="author" content="SHIAN STUDIO">
+  <link rel="canonical" href="https://shianstudio.com/shape_memory/">
+  <link rel="stylesheet" href="../games.css">
+  <style>
+    .memory-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .memory-card {
+      aspect-ratio: 1;
+      border: 3px solid #252331;
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, #fff, #f2ebda);
+      box-shadow: 0 8px 0 rgba(37, 35, 49, .18);
+      color: transparent;
+      cursor: pointer;
+      font-size: clamp(2rem, 8vw, 4.6rem);
+      font-weight: 900;
+      line-height: 1;
+      transition: transform 140ms ease, background 140ms ease, color 140ms ease;
+    }
+
+    .memory-card::before {
+      content: "?";
+      color: #252331;
+    }
+
+    .memory-card.open,
+    .memory-card.matched {
+      color: #252331;
+      background: #fff;
+      transform: scale(.98);
+    }
+
+    .memory-card.open::before,
+    .memory-card.matched::before {
+      content: "";
+    }
+
+    .memory-card.matched {
+      background: #dff4e6;
+      border-color: var(--green);
+      cursor: default;
+    }
+
+    .memory-card.bad {
+      background: #ffe6df;
+    }
+
+    @media (max-width: 560px) {
+      .memory-board {
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="メインナビゲーション">
+      <a class="brand" href="/">SHIAN STUDIO</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/contact.html">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div class="game-layout">
+      <section class="game-panel" aria-labelledby="game-title">
+        <div class="game-head">
+          <div>
+            <p class="game-kicker">Memory Game</p>
+            <h1 id="game-title">かたちメモリー</h1>
+            <p class="lead">カードを2枚ずつめくり、同じ図形のペアを探します。</p>
+          </div>
+          <div class="stats" aria-live="polite">
+            <div class="stat"><span>Pairs</span><strong id="pairs">0/6</strong></div>
+            <div class="stat"><span>Moves</span><strong id="moves">0</strong></div>
+            <div class="stat"><span>Time</span><strong id="time">0</strong></div>
+          </div>
+        </div>
+
+        <div class="playfield">
+          <div class="memory-board" id="board" aria-label="メモリーカード"></div>
+          <p class="message" id="message">スタートでカードを並べます</p>
+        </div>
+
+        <div class="controls">
+          <button class="primary-btn" id="startButton" type="button">スタート</button>
+          <button class="ghost-btn" id="resetButton" type="button">並べ直す</button>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <h2>遊び方</h2>
+        <ul>
+          <li>カードを2枚めくります。</li>
+          <li>同じ図形ならペアとして残ります。</li>
+          <li>全6ペアを少ない手数でそろえます。</li>
+        </ul>
+        <p>記憶しやすいよう、色ではなく形の違いを中心にしたカード構成です。</p>
+      </aside>
+    </div>
+
+    <section class="notes" aria-labelledby="notes-title">
+      <h2 id="notes-title">制作メモ</h2>
+      <div class="note-grid">
+        <section class="note-card">
+          <h3>形だけで判断</h3>
+          <p>シンプルな記号を使い、カードの位置を覚える遊びに集中できるようにしています。</p>
+        </section>
+        <section class="note-card">
+          <h3>短い達成感</h3>
+          <p>12枚構成なので、1回のプレイが長くなりすぎません。手数と時間で再挑戦の目標を作れます。</p>
+        </section>
+        <section class="note-card">
+          <h3>注意事項</h3>
+          <p>結果は端末内だけで処理されます。個人情報を入力する必要はありません。</p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>© SHIAN STUDIO</span>
+      <nav class="footer-links" aria-label="フッターナビゲーション">
+        <a href="/">Home</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/contact.html">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    const shapes = [
+      { symbol: "●", label: "丸" },
+      { symbol: "■", label: "四角" },
+      { symbol: "▲", label: "三角" },
+      { symbol: "◆", label: "ひし形" },
+      { symbol: "✚", label: "十字" },
+      { symbol: "✦", label: "星形" }
+    ];
+
+    const board = document.querySelector("#board");
+    const pairsEl = document.querySelector("#pairs");
+    const movesEl = document.querySelector("#moves");
+    const timeEl = document.querySelector("#time");
+    const message = document.querySelector("#message");
+    const startButton = document.querySelector("#startButton");
+    const resetButton = document.querySelector("#resetButton");
+
+    let first = null;
+    let second = null;
+    let locked = false;
+    let matched = 0;
+    let moves = 0;
+    let seconds = 0;
+    let timer = null;
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function renderStats() {
+      pairsEl.textContent = `${matched}/6`;
+      movesEl.textContent = moves;
+      timeEl.textContent = seconds;
+    }
+
+    function startTimer() {
+      clearInterval(timer);
+      timer = setInterval(() => {
+        seconds += 1;
+        renderStats();
+      }, 1000);
+    }
+
+    function createBoard() {
+      const cards = shuffle([...shapes, ...shapes].map((shape, index) => ({ ...shape, id: index })));
+      board.innerHTML = "";
+      cards.forEach((shape) => {
+        const button = document.createElement("button");
+        button.className = "memory-card";
+        button.type = "button";
+        button.textContent = shape.symbol;
+        button.dataset.symbol = shape.symbol;
+        button.setAttribute("aria-label", `${shape.label}のカード`);
+        button.addEventListener("click", () => openCard(button));
+        board.append(button);
+      });
+    }
+
+    function openCard(card) {
+      if (locked || card.classList.contains("open") || card.classList.contains("matched")) return;
+      card.classList.add("open");
+      if (!first) {
+        first = card;
+        message.textContent = "もう1枚めくってください";
+        return;
+      }
+
+      second = card;
+      moves += 1;
+      locked = true;
+
+      if (first.dataset.symbol === second.dataset.symbol) {
+        first.classList.add("matched");
+        second.classList.add("matched");
+        first = null;
+        second = null;
+        locked = false;
+        matched += 1;
+        message.textContent = matched === 6 ? `完成。${moves}手、${seconds}秒でした` : "ペア成立";
+        if (matched === 6) clearInterval(timer);
+      } else {
+        first.classList.add("bad");
+        second.classList.add("bad");
+        window.setTimeout(() => {
+          first.classList.remove("open", "bad");
+          second.classList.remove("open", "bad");
+          first = null;
+          second = null;
+          locked = false;
+          message.textContent = "場所を覚えて続けましょう";
+        }, 650);
+      }
+
+      renderStats();
+    }
+
+    function start() {
+      first = null;
+      second = null;
+      locked = false;
+      matched = 0;
+      moves = 0;
+      seconds = 0;
+      createBoard();
+      renderStats();
+      message.textContent = "同じ形を探してください";
+      startTimer();
+    }
+
+    startButton.addEventListener("click", start);
+    resetButton.addEventListener("click", start);
+    start();
+  </script>
+</body>
+</html>

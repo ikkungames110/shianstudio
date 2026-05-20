@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ラインランナー | SHIAN STUDIO</title>
+  <meta name="description" content="ラインランナーは、3本のレーンを切り替えながら障害物を避け、光のチップを集めるブラウザゲームです。キーボードでもタップでも遊べます。">
+  <meta name="author" content="SHIAN STUDIO">
+  <link rel="canonical" href="https://shianstudio.com/line_runner/">
+  <link rel="stylesheet" href="../games.css">
+  <style>
+    .lane-controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .lane-controls button {
+      min-height: 52px;
+      border: 2px solid #252331;
+      border-radius: 8px;
+      color: #252331;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .lane-controls button.active {
+      color: #fff;
+      background: var(--blue);
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="メインナビゲーション">
+      <a class="brand" href="/">SHIAN STUDIO</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/contact.html">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div class="game-layout">
+      <section class="game-panel" aria-labelledby="game-title">
+        <div class="game-head">
+          <div>
+            <p class="game-kicker">Lane Action Game</p>
+            <h1 id="game-title">ラインランナー</h1>
+            <p class="lead">3本のレーンを切り替え、ブロックを避けながら光のチップを集めます。</p>
+          </div>
+          <div class="stats" aria-live="polite">
+            <div class="stat"><span>Score</span><strong id="score">0</strong></div>
+            <div class="stat"><span>Life</span><strong id="life">3</strong></div>
+            <div class="stat"><span>Time</span><strong id="time">45</strong></div>
+          </div>
+        </div>
+
+        <div class="playfield">
+          <div class="canvas-wrap">
+            <canvas id="gameCanvas" width="960" height="540" aria-label="ラインランナーのゲーム画面"></canvas>
+          </div>
+          <div class="lane-controls" aria-label="レーン選択">
+            <button type="button" data-lane="0">左</button>
+            <button type="button" data-lane="1">中央</button>
+            <button type="button" data-lane="2">右</button>
+          </div>
+          <p class="message" id="message">スタートで開始</p>
+        </div>
+
+        <div class="controls">
+          <button class="primary-btn" id="startButton" type="button">スタート</button>
+          <button class="ghost-btn" id="resetButton" type="button">リセット</button>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <h2>遊び方</h2>
+        <ul>
+          <li>左右キー、A/Dキー、またはボタンでレーンを移動します。</li>
+          <li>赤いブロックに当たるとライフが減ります。</li>
+          <li>黄色いチップを取ると得点が増えます。</li>
+        </ul>
+        <p>45秒間でどれだけ集められるかを競う、反射神経寄りのアクションゲームです。</p>
+      </aside>
+    </div>
+
+    <section class="notes" aria-labelledby="notes-title">
+      <h2 id="notes-title">制作メモ</h2>
+      <div class="note-grid">
+        <section class="note-card">
+          <h3>3レーンの判断</h3>
+          <p>動ける場所を3つに絞ることで、スマートフォンでも迷わず操作できるようにしています。</p>
+        </section>
+        <section class="note-card">
+          <h3>避けるか拾うか</h3>
+          <p>障害物と得点アイテムを同じ流れで出し、次に移るレーンを短時間で選ぶ遊びにしています。</p>
+        </section>
+        <section class="note-card">
+          <h3>注意事項</h3>
+          <p>高速で流れる表示があります。見づらい場合や疲れた場合はプレイを止めて休憩してください。</p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>© SHIAN STUDIO</span>
+      <nav class="footer-links" aria-label="フッターナビゲーション">
+        <a href="/">Home</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/contact.html">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    const canvas = document.querySelector("#gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreEl = document.querySelector("#score");
+    const lifeEl = document.querySelector("#life");
+    const timeEl = document.querySelector("#time");
+    const message = document.querySelector("#message");
+    const startButton = document.querySelector("#startButton");
+    const resetButton = document.querySelector("#resetButton");
+    const laneButtons = [...document.querySelectorAll("[data-lane]")];
+
+    const lanes = [0.25, 0.5, 0.75];
+    let lane = 1;
+    let score = 0;
+    let life = 3;
+    let timeLeft = 45;
+    let running = false;
+    let objects = [];
+    let spawn = 0;
+    let speed = 280;
+    let last = performance.now();
+
+    function setLane(value) {
+      lane = Math.max(0, Math.min(2, value));
+      laneButtons.forEach((button) => button.classList.toggle("active", Number(button.dataset.lane) === lane));
+    }
+
+    function renderStats() {
+      scoreEl.textContent = score;
+      lifeEl.textContent = life;
+      timeEl.textContent = Math.max(0, Math.ceil(timeLeft));
+    }
+
+    function spawnObject() {
+      const type = Math.random() < 0.34 ? "chip" : "block";
+      objects.push({
+        type,
+        lane: Math.floor(Math.random() * 3),
+        y: -60,
+        size: type === "chip" ? 34 : 52,
+        hit: false
+      });
+    }
+
+    function draw() {
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#151927";
+      ctx.fillRect(0, 0, w, h);
+
+      lanes.forEach((x, index) => {
+        const px = x * w;
+        ctx.fillStyle = index === lane ? "rgba(77, 95, 203, .22)" : "rgba(255,255,255,.06)";
+        ctx.fillRect(px - 82, 0, 164, h);
+        ctx.strokeStyle = "rgba(255,255,255,.18)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(px, 0);
+        ctx.lineTo(px, h);
+        ctx.stroke();
+      });
+
+      objects.forEach((item) => {
+        const x = lanes[item.lane] * w;
+        if (item.type === "chip") {
+          ctx.fillStyle = "#f4bd45";
+          ctx.strokeStyle = "#fff7d7";
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.arc(x, item.y, item.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = "#d94f5c";
+          ctx.strokeStyle = "#ffe6df";
+          ctx.lineWidth = 5;
+          ctx.fillRect(x - item.size / 2, item.y - item.size / 2, item.size, item.size);
+          ctx.strokeRect(x - item.size / 2, item.y - item.size / 2, item.size, item.size);
+        }
+      });
+
+      const playerX = lanes[lane] * w;
+      const playerY = h - 78;
+      ctx.fillStyle = "#2b8a8f";
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(playerX, playerY - 42);
+      ctx.lineTo(playerX - 42, playerY + 34);
+      ctx.lineTo(playerX + 42, playerY + 34);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    function update(delta) {
+      timeLeft -= delta;
+      spawn -= delta;
+      speed += delta * 4;
+      if (spawn <= 0) {
+        spawnObject();
+        spawn = Math.max(0.32, 0.85 - score / 1400);
+      }
+
+      const playerY = canvas.height - 78;
+      objects.forEach((item) => {
+        item.y += speed * delta;
+        if (!item.hit && item.lane === lane && Math.abs(item.y - playerY) < 48) {
+          item.hit = true;
+          if (item.type === "chip") {
+            score += 20;
+            message.textContent = "チップ獲得";
+          } else {
+            life -= 1;
+            message.textContent = "ブロックに接触";
+          }
+        }
+      });
+
+      objects = objects.filter((item) => item.y < canvas.height + 80 && !item.hit);
+      if (life <= 0 || timeLeft <= 0) {
+        running = false;
+        timeLeft = Math.max(0, timeLeft);
+        message.textContent = `終了。スコアは${score}です`;
+      }
+      renderStats();
+    }
+
+    function loop(now) {
+      const delta = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (running) update(delta);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function start() {
+      score = 0;
+      life = 3;
+      timeLeft = 45;
+      objects = [];
+      spawn = 0;
+      speed = 280;
+      running = true;
+      setLane(1);
+      message.textContent = "レーンを切り替えて進みます";
+      renderStats();
+    }
+
+    function reset() {
+      running = false;
+      score = 0;
+      life = 3;
+      timeLeft = 45;
+      objects = [];
+      speed = 280;
+      setLane(1);
+      message.textContent = "スタートで開始";
+      renderStats();
+    }
+
+    laneButtons.forEach((button) => {
+      button.addEventListener("click", () => setLane(Number(button.dataset.lane)));
+    });
+    startButton.addEventListener("click", start);
+    resetButton.addEventListener("click", reset);
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft" || event.key === "a") setLane(lane - 1);
+      if (event.key === "ArrowRight" || event.key === "d") setLane(lane + 1);
+    });
+
+    reset();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
