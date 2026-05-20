@@ -3,10 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>文字迷路の赤ずきん 10x10 | SHIAN STUDIO</title>
-  <meta name="description" content="ひらがなで作られた10x10の文字迷路を進み、赤ずきんを正解ルートへ導くブラウザゲームです。矢印キーまたは画面上の方向ボタンで遊べます。">
-  <meta name="author" content="SHIAN STUDIO">
-  <link rel="canonical" href="https://shianstudio.com/nobel_maze/20260510-000026.html">
+  <meta name="robots" content="noindex,follow">
+  <title>文字迷路の赤ずきん 10x10</title>
   <style>
     :root {
       color-scheme: light;
@@ -611,7 +609,7 @@
       left: 0;
       right: 0;
       bottom: 28%;
-      z-index: 0;
+      z-index: 1;
       height: 42%;
       overflow: hidden;
       pointer-events: none;
@@ -1020,21 +1018,21 @@
 
     .cell.ending { --cell-fill: #dff1c9; }
     .cell.good-result { --cell-fill: #ffe28b; }
-    .cell.bad-result { --cell-fill: var(--tile); }
+    .cell.bad-result { --cell-fill: #dff1c9; }
 
     .cell.bad-result::before {
-      content: "";
+      content: "✓";
       position: absolute;
-      z-index: 0;
-      left: 50%;
-      top: 50%;
-      width: 44%;
-      height: 24%;
-      border-left: clamp(5px, .8vw, 8px) solid rgba(218, 92, 98, .36);
-      border-bottom: clamp(5px, .8vw, 8px) solid rgba(218, 92, 98, .36);
+      inset: 0;
+      display: grid;
+      place-items: center;
       border-radius: 6px;
       background: transparent;
-      transform: translate(-50%, -60%) rotate(-42deg);
+      color: rgba(219, 80, 90, .34);
+      font-size: clamp(2rem, 5.4vw, 3.8rem);
+      font-weight: 900;
+      line-height: 1;
+      transform: rotate(-8deg);
     }
 
     .cell.bad-result.current::after {
@@ -1305,7 +1303,7 @@
       <div id="stage" class="image-stage" role="img" aria-label="赤ずきんのアニメーション"></div>
       <div class="stage-caption">
         <div class="stage-title" id="stageTitle">森の入口</div>
-        <div class="stage-text" id="stageText"><ruby>方向<rt>ほうこう</rt></ruby>ボタンで<ruby>進<rt>すす</rt></ruby>み、<ruby>赤<rt>あか</rt></ruby>ずきんを<ruby>正解<rt>せいかい</rt></ruby>のルートに<ruby>導<rt>みちび</rt></ruby>きましょう</div>
+        <div class="stage-text" id="stageText">方向キーで進み、ひらがなをつなげて一文を完成させます。</div>
       </div>
     </section>
 
@@ -1405,9 +1403,6 @@
       ["空飛ぶ", "<ruby>空<rt>そら</rt></ruby><ruby>飛<rt>と</rt></ruby>ぶ"],
       ["ひと回り", "ひと<ruby>回<rt>まわ</rt></ruby>り"],
       ["赤ずきん", "<ruby>赤<rt>あか</rt></ruby>ずきん"],
-      ["方向", "<ruby>方向<rt>ほうこう</rt></ruby>"],
-      ["正解", "<ruby>正解<rt>せいかい</rt></ruby>"],
-      ["導き", "<ruby>導<rt>みちび</rt></ruby>き"],
       ["見とれて", "<ruby>見<rt>み</rt></ruby>とれて"],
       ["止めました", "<ruby>止<rt>と</rt></ruby>めました"],
       ["浮いた", "<ruby>浮<rt>う</rt></ruby>いた"],
@@ -1461,7 +1456,7 @@
     validateMaze();
     warmSceneImages();
     buildMaze();
-    renderCaption("森の入口", "方向ボタンで進み、赤ずきんを正解のルートに導きましょう");
+    renderCaption("森の入口", "方向キーで進み、ひらがなをつなげて一文を完成させます。");
     renderScene("ready");
     renderMaze();
 
@@ -1636,7 +1631,7 @@
       locked = false;
       hideResultActions();
       app.classList.remove("wrong-mode");
-      renderCaption("森の入口", "方向ボタンで進み、赤ずきんを正解のルートに導きましょう");
+      renderCaption("森の入口", "方向キーで進み、ひらがなをつなげて一文を完成させます。");
       renderScene("ready");
       renderMaze();
     }

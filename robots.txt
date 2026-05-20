@@ -1,4 +1,12 @@
 User-agent: *
 Allow: /
+Disallow: /TASK.md
+Disallow: /nobel_maze/.github/
+Disallow: /nobel_maze/AGENTS.md
+Disallow: /taion/TASK.md
+Disallow: /taion/scripts/
+Disallow: /type_checker/AGENTS.md
+Disallow: /type_checker/type.md
+Disallow: /type_checker/scripts/
 
 Sitemap: https://shianstudio.com/sitemap.xml

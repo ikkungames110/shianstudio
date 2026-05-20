@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI顔タイプ診断 Prototype</title>
+  <title>好みの顔タイプ診断 | SHIAN STUDIO</title>
+  <meta name="description" content="好みの顔タイプ診断は、2択で気になる顔を選びながら、惹かれやすい雰囲気や特徴を整理するブラウザ診断です。判定方法と注意事項も掲載しています。">
+  <meta name="author" content="SHIAN STUDIO">
+  <link rel="canonical" href="https://shianstudio.com/type_checker/">
   <style>
     :root {
       color-scheme: light;
@@ -342,6 +345,67 @@
       font-weight: 700;
     }
 
+    .content-notes {
+      display: grid;
+      gap: 18px;
+      margin-top: 20px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+
+    .content-notes h2 {
+      max-width: none;
+      font-size: clamp(22px, 4vw, 32px);
+    }
+
+    .content-notes > p {
+      max-width: 56em;
+      color: #3d3d3d;
+      line-height: 1.9;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .content-card {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 10px 24px rgba(32, 29, 25, 0.07);
+    }
+
+    .content-card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    .content-card p,
+    .content-card li {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .content-card p,
+    .content-card ul {
+      margin: 0;
+    }
+
+    .content-card ul {
+      padding-left: 1.2em;
+    }
+
+    .content-notes a {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
     @media (max-width: 760px) {
       .app {
         align-content: start;
@@ -364,6 +428,10 @@
         gap: 10px;
       }
 
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
       .face-card {
         padding: 7px;
       }
@@ -378,10 +446,10 @@
   <main class="app">
     <div class="topbar">
       <div class="brand">
-        <strong>AI顔タイプ診断</strong>
-        <span>SNS向け診断プロトタイプ</span>
+        <strong>好みの顔タイプ診断</strong>
+        <span>2択で好みを整理</span>
       </div>
-      <div class="progress-text" id="topStatus">Prototype</div>
+      <div class="progress-text" id="topStatus">20問診断</div>
     </div>
 
     <section class="screen active" id="startScreen">
@@ -437,6 +505,62 @@
           <div class="toast" id="toast" role="status" aria-live="polite"></div>
         </div>
       </div>
+    </section>
+
+    <section class="content-notes" aria-labelledby="about-diagnosis-title">
+      <h2 id="about-diagnosis-title">この診断について</h2>
+      <p>
+        好みの顔タイプ診断は、表示された2つの顔から直感で好きな方を選び、選択に含まれる特徴を集計するブラウザ診断です。
+        顔立ちの優劣を判定するものではなく、自分が惹かれやすい雰囲気を言葉にするための娯楽コンテンツとして制作しています。
+      </p>
+      <p>
+        画像をアップロードする診断ではないため、利用者の顔写真を送信する必要はありません。
+        ブラウザ上に用意した診断用素材を選ぶだけで完了し、結果の共有文も自分で確認してからコピーできます。
+      </p>
+      <div class="content-grid">
+        <section class="content-card">
+          <h3>判定方法</h3>
+          <p>
+            つり目、たれ目、クール、かわいい、大人っぽいなどの特徴タグを各顔データに設定し、選ばれたタグの合計から結果名を表示します。
+          </p>
+        </section>
+        <section class="content-card">
+          <h3>遊び方</h3>
+          <ul>
+            <li>女性または男性の診断対象を選びます。</li>
+            <li>20回、より好みに近い顔を選びます。</li>
+            <li>結果画面で強く出た特徴とタイプ名を確認できます。</li>
+          </ul>
+        </section>
+        <section class="content-card">
+          <h3>注意事項</h3>
+          <p>
+            結果は固定的な性格診断や美容診断ではありません。表示される顔画像は診断用の素材で、個人を特定する目的では利用していません。
+          </p>
+        </section>
+        <section class="content-card">
+          <h3>素材について</h3>
+          <p>
+            顔素材は診断内での比較に使うためのイラスト調データです。実在の人物の評価やランキングを目的にした内容ではありません。
+          </p>
+        </section>
+        <section class="content-card">
+          <h3>推奨環境</h3>
+          <p>
+            スマートフォンとPCのモダンブラウザで利用できます。画像の読み込みに時間がかかる場合は、通信環境を確認してください。
+          </p>
+        </section>
+        <section class="content-card">
+          <h3>更新方針</h3>
+          <p>
+            選択肢の偏りや表示崩れを見つけた場合は修正します。診断の説明と結果文は、誤解が出にくい表現へ随時見直します。
+          </p>
+        </section>
+      </div>
+      <p>
+        不具合、権利に関する連絡、掲載内容の確認は
+        <a href="/contact.html">お問い合わせ</a>から受け付けています。
+      </p>
     </section>
   </main>
 
@@ -690,13 +814,13 @@
         </div>
       `).join("");
 
-      state.lastResult = `AI顔タイプ診断の結果(${state.dataset.resultTarget}): ${title}\n${scores.slice(0, 4).map(item => `#${item.label}好き`).join(" ")}`;
+      state.lastResult = `好みの顔タイプ診断の結果(${state.dataset.resultTarget}): ${title}\n${scores.slice(0, 4).map(item => `#${item.label}好き`).join(" ")}`;
       topStatus.textContent = "診断完了";
       show(resultScreen);
     }
 
     function reset() {
-      topStatus.textContent = "Prototype";
+      topStatus.textContent = "20問診断";
       toast.textContent = "";
       show(startScreen);
     }
