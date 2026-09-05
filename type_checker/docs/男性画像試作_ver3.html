@@ -2,7 +2,7 @@
 <html lang="ja">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>男性10人の画像試作 ver3</title>
+<title>男性10人の画像試作 ver3.1</title>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0 auto; padding: 28px 20px 60px; max-width: 1600px; font: 16px/1.7 system-ui, sans-serif; color: #252525; background: #faf9f6; }
@@ -24,8 +24,9 @@
   @media (max-width: 1000px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 600px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } body { padding: 18px 12px; } }
 </style>
-<h1>男性10人の画像試作 ver3</h1>
+<h1>男性10人の画像試作 ver3.1</h1>
 <p>改訂した男性40人から無作為に選んだ10人です。輪郭・目・口元・鼻・眉・髪型の違いを見比べられます。画像を押すと保存済みの全体画像を開きます。</p>
+<p>口元は小ぶり〜中間に抑え、下ろし前髪は眉にかかる自然な長さへ修正しました。</p>
 <p><a href="設計書_ver3.md">改訂設計書</a> · <a href="画像生成用特徴量_男性40人_ver3.md">男性40人</a> · <a href="画像生成用特徴量_女性40人_ver3.md">女性40人</a> · <a href="男性画像試作_ver3.md">抽出・生成記録</a></p>
 <div class="controls"><label><input id="full" type="checkbox"> 胸元まで含む全体表示</label></div>
 <main id="portraits" class="grid" aria-label="試作した10人の画像一覧"></main>

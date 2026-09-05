@@ -1,5 +1,5 @@
 {
-  "schema_version": "3.0.0",
+  "schema_version": "3.1.0",
   "features": [
     {
       "key": "eye_angle",
@@ -858,5 +858,11 @@
         "lip_fullness": 0.8
       }
     }
-  ]
+  ],
+  "generation_constraints": {
+    "mouth_width_max": 0.5,
+    "lip_fullness_max": 0.5,
+    "fringe_down": "Natural separated bangs covering the eyebrows, no above-eyebrow fringe or bowl-cut silhouette.",
+    "occlusion_policy": "Allow partial eyebrow coverage; mark hidden eyebrow features as unverified."
+  }
 }

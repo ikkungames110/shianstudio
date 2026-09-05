@@ -30,19 +30,19 @@ EYES = ['round open eyes, short horizontally and visibly tall vertically', 'roun
 EYE_JA = ['丸い', '丸アーモンド', 'アーモンド', '細アーモンド', '切れ長']
 TILTS = ['clearly downturned outer corners, a natural gentle downward slant about 4 degrees', 'slightly downturned outer corners, about 2 degrees downward', 'level inner and outer eye corners', 'slightly upturned outer corners, about 2 degrees upward', 'clearly upturned outer corners, a natural upward slant about 4 degrees']
 TILT_JA = ['垂れ', 'やや垂れ', '水平', 'ややつり', 'つり']
-WIDTHS = ['a visibly compact narrow mouth', 'a slightly narrow mouth', 'a medium-width mouth', 'a slightly wide mouth', 'a distinctly wide mouth with longer horizontal lips']
-WIDTH_JA = ['短い', 'やや短い', '中間', 'やや長い', '長い']
-LIPS = ['clearly thin upper and lower lips with visible natural vermilion', 'slender lips with restrained volume', 'medium-thickness lips', 'noticeably full lips', 'distinctly thick, naturally full lips with substantial visible vermilion, without a filler look']
-LIP_JA = ['薄い', 'やや薄い', '中間', 'やや厚い', '厚い']
+WIDTHS = ['a compact narrow mouth', 'a slightly narrow mouth', 'an ordinary medium-width mouth']
+WIDTH_JA = ['短い', 'やや短い', '中間']
+LIPS = ['naturally thin upper and lower lips', 'slender lips with restrained volume', 'ordinary medium-thin lips with restrained natural volume']
+LIP_JA = ['薄い', 'やや薄い', '中間']
 HAIR = {
     'male': [
         ('center_part', 'センターパート', 'straight black hair with a clearly visible center part, two curtain sections swept to the sides above the eyebrows, ears visible'),
-        ('mash', 'マッシュ', 'a black rounded mushroom haircut, a rounded fringe line ending above the eyebrows, ears visible'),
+        ('fringe_down', '自然な下ろし前髪', 'ordinary layered short black hair with a soft, loosely separated fringe falling naturally down over the eyebrows; wispy tips reach just below the eyebrows but stay out of the eyes; light natural volume and irregular strands, no bowl-cut outline and no blunt straight fringe'),
         ('up_bang', 'アップバング', 'short black hair with the entire front fringe lifted up and back, fully exposed forehead, short sides, no skin fade'),
     ],
     'female': [
         ('center_part', 'センターパート', 'straight black shoulder-length hair with a center part, forehead exposed and side strands tucked behind the ears'),
-        ('mash', 'マッシュボブ', 'a black rounded jaw-length mushroom bob, light rounded fringe ending above the eyebrows, side hair tucked behind the ears to reveal the jaw'),
+        ('fringe_down', '自然な下ろし前髪', 'straight black shoulder-length hair with a soft, loosely separated fringe falling naturally over the eyebrows; wispy tips reach just below the eyebrows but stay out of the eyes; side hair tucked behind the ears, no rounded bowl silhouette and no blunt straight fringe'),
         ('up_bang', '額出し', 'black shoulder-length hair with the front section lifted and swept back, full forehead visible, side hair tucked behind the ears'),
     ],
 }
@@ -97,6 +97,9 @@ def make_plan(gender, seed):
     records = []
     for i in range(40):
         c = {k:v[i] for k,v in cols.items()}
+        # Keep the original identities / allocation; cap only the rejected mouth extremes.
+        for key in ['mouth_width', 'lip_fullness']:
+            c[key] = min(c[key], 2)
         outline = OUTLINES[c['outline']]
         shape = dict(zip(OUTLINE_KEYS, outline[3]))
         for key in KEYS:
@@ -112,6 +115,7 @@ def make_plan(gender, seed):
             f'Facial identity, highest priority: {outline[2]}. Eyes: {EYES[c["eye_shape"]]}; {TILTS[c["eye_angle"]]}; '
             f'{phrase("upper_eyelid_crease")}. Mouth: {WIDTHS[c["mouth_width"]]}; {LIPS[c["lip_fullness"]]}; '
             f'{phrase("upper_lip_share")}; {phrase("cupid_bow_definition")}. '
+            'Keep the mouth compact to average in width and the lips thin to moderate; no large mouth, no thick or plumped lips, no overlining. '
             f'Nose: {phrase("nose_width")}, {phrase("nose_bridge_height")}, {phrase("nose_tip_roundness")}; an ordinary natural nose, with its specified width and tip clearly visible. '
             f'Brows: {phrase("eyebrow_arch")}, {phrase("eyebrow_thickness")}, {phrase("eyebrow_angle")}; naturally groomed, no extreme arches or shaved brows. '
             f'Hair: {hair[2]}. Additional proportions: {phrase("eye_size")}, {phrase("eye_spacing")}, '
@@ -120,16 +124,16 @@ def make_plan(gender, seed):
             'Realistic editorial beauty photograph with natural skin texture, dark brown eyes, minimal natural makeup, no contour makeup, no facial hair, no jewelry or glasses. '
             'Front-facing, head level, eyes at camera, relaxed neutral expression, closed lips without smile. Plain light-gray crew-neck top. Neutral light-gray studio background and even soft frontal lighting. '
             'Portrait 3:4 canvas. Moderately pulled-back camera, crop at middle of chest, show full head and shoulders and natural background around the head. Face from hairline to chin occupies about 38 percent of image height, face center at 50 percent width and 38 percent height. '
-            'Eyebrows and full cheek and jaw contours must be visible. No tight face crop, no waist or legs, no caricature, no text, no watermark.'
+            'Keep eyes and full cheek and jaw contours visible. For a downward fringe, allow natural partial eyebrow coverage and do not shorten the fringe to expose the eyebrows. No baby bangs or above-eyebrow fringe. No tight face crop, no waist or legs, no caricature, no text, no watermark.'
         )
         ident = f'{gender}_{i+1:03d}'
         label = '・'.join([outline[1],EYE_JA[c['eye_shape']],TILT_JA[c['eye_angle']],f"唇{WIDTH_JA[c['mouth_width']]}／{LIP_JA[c['lip_fullness']]}",hair[1]])
         records.append(dict(id=ident,gender=gender,image=None,planned_image=f'assets/previews/v3/{gender}/{ident}.png',label=label,tags=tags(shape),prompt=prompt,
                             shape_features=shape,appearance_features=dict(face_outline=outline[0],hair_style=hair[0]),
-                            design_levels=c,schema_version='3.0.0',mapping_version='shape-impression-1',
+                            design_levels=c,schema_version='3.1.0',mapping_version='shape-impression-1',
                             asset_version='v3-planned',review_status='planned',shape_feature_source='generation_target'))
-    return dict(schema_version='3.0.0',gender=gender,design_seed=seed,records=records,
-                coverage={k:dict(sorted(Counter(v).items())) for k,v in cols.items()})
+    return dict(schema_version='3.1.0',gender=gender,design_seed=seed,records=records,
+                coverage={k:dict(sorted(Counter(r['design_levels'][k] for r in records).items())) for k in cols})
 
 
 def write_docs(plan):
@@ -167,6 +171,11 @@ def main():
         path.write_text(json.dumps(dict(gender='male',population=40,sample_size=10,seed=seed,
                         method='Python random.Random(seed).sample(population_in_id_order, 10)',
                         ids_in_draw_order=ids,plan_sha256=hashlib.sha256(plan_path.read_bytes()).hexdigest()),indent=2)+'\n')
+    draw = json.loads(path.read_text())
+    draw['current_plan_sha256'] = hashlib.sha256((ROOT/'data/plans/male_faces_v3.json').read_bytes()).hexdigest()
+    draw['current_plan_version'] = '3.1.0'
+    draw['revision_note'] = '抽出IDは維持。唇の厚さ・横幅を中間以下へ制限し、下ろし前髪を眉にかかる自然な長さへ修正。plan_sha256は初回抽出時の計画。'
+    path.write_text(json.dumps(draw, ensure_ascii=False, indent=2)+'\n')
     print(path.read_text())
 
 
