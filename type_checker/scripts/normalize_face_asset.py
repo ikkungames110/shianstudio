@@ -24,7 +24,12 @@ def detect_face(image: np.ndarray) -> tuple[int, int, int, int] | None:
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     cascade_path = Path(cv2.data.haarcascades) / "haarcascade_frontalface_default.xml"
     cascade = cv2.CascadeClassifier(str(cascade_path))
-    faces = cascade.detectMultiScale(gray, scaleFactor=1.08, minNeighbors=5, minSize=(120, 120))
+    height, width = gray.shape
+    # 頭・肩・胸を含む構図なので、画像全体に近い検出枠は誤検出として除外する。
+    faces = cascade.detectMultiScale(
+        gray, scaleFactor=1.08, minNeighbors=5, minSize=(120, 120),
+        maxSize=(int(width * 0.75), int(height * 0.60)),
+    )
     if len(faces) == 0:
         return None
     return max(faces, key=lambda rect: rect[2] * rect[3])
@@ -59,6 +64,17 @@ def crop_with_padding(image: np.ndarray, x: float, y: float, w: float, h: float)
     return image[y0:y1, x0:x1]
 
 
+def fit_crop_origin(image: np.ndarray, x: float, y: float, w: float, h: float) -> tuple[float, float]:
+    height, width = image.shape[:2]
+    if w <= width and h <= height:
+        fitted_x = min(max(x, 0), width - w)
+        fitted_y = min(max(y, 0), height - h)
+        # わずかな構図ずれは窓を移動して吸収し、背景の複製を避ける。
+        if abs(fitted_x - x) <= w * 0.05 and abs(fitted_y - y) <= h * 0.05:
+            return fitted_x, fitted_y
+    return x, y
+
+
 def normalize(image: np.ndarray) -> tuple[np.ndarray, bool]:
     face = detect_face(image)
     if face is None:
@@ -86,6 +102,7 @@ def normalize(image: np.ndarray) -> tuple[np.ndarray, bool]:
     face_center_y = y + h / 2
     crop_x = face_center_x - TARGET_FACE_CENTER_X / scale
     crop_y = face_center_y - TARGET_FACE_CENTER_Y / scale
+    crop_x, crop_y = fit_crop_origin(image, crop_x, crop_y, crop_w, crop_h)
 
     crop = crop_with_padding(image, crop_x, crop_y, crop_w, crop_h)
     return cv2.resize(crop, (OUTPUT_WIDTH, OUTPUT_HEIGHT), interpolation=cv2.INTER_CUBIC), True

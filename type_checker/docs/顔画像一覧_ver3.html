@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>男女80人の顔画像 ver3.1</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0 auto; padding: 28px 20px 60px; max-width: 1600px; font: 16px/1.7 system-ui, sans-serif; color: #252525; background: #faf9f6; }
+  h1 { margin-bottom: 8px; font-size: clamp(24px, 3vw, 36px); }
+  p { max-width: 900px; }
+  a { color: #315d78; }
+  .controls { display: flex; flex-wrap: wrap; gap: 24px; margin: 24px 0; }
+  .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px 14px; }
+  figure { margin: 0; }
+  figure a { display: block; }
+  img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; object-position: center 15%; border-radius: 6px; background: #e7e7e7; }
+  .full img { aspect-ratio: 3/4; object-fit: contain; }
+  figcaption { text-align: center; padding-top: 6px; font: 14px/1.5 ui-monospace, monospace; }
+  details { margin-top: 32px; }
+  summary { cursor: pointer; }
+  .detail { border-top: 1px solid #ddd; padding: 18px 0; }
+  .detail p { margin: 6px 0; }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; background: #eee; padding: 12px; }
+  @media (max-width: 1000px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } body { padding: 18px 12px; } }
+</style>
+<h1>男女80人の顔画像 ver3.1</h1>
+<p>修正版の条件で制作した男性40人・女性40人です。輪郭・目・口元・鼻・眉・髪型の違いを見比べられます。画像を押すと保存済みの全体画像を開きます。</p>
+<p>口元は小ぶり〜中間に抑え、下ろし前髪は眉にかかる自然な長さへ修正しました。</p>
+<p><a href="設計書_ver3.md">改訂設計書</a> · <a href="画像生成用特徴量_男性40人_ver3.md">男性40人</a> · <a href="画像生成用特徴量_女性40人_ver3.md">女性40人</a> · <a href="顔画像生成_ver3.md">生成記録</a></p>
+<div class="controls"><label>表示するセット <select id="gender"><option value="male">男性40人</option><option value="female">女性40人</option></select></label><label><input id="full" type="checkbox"> 胸元まで含む全体表示</label></div>
+<main id="portraits" class="grid" aria-label="生成した40人の画像一覧"></main>
+<details><summary>生成目標と目視メモを見る</summary>
+<p>数値は生成時の目標で、画像からの実測値ではありません。以下は制作確認用で、診断中の選択カードには表示しません。</p>
+<div id="metadata"></div></details>
+<noscript>一覧表示にはJavaScriptが必要です。<a href="顔画像生成_ver3.md">生成記録</a>からも確認できます。</noscript>
+<script src="../data/male_faces.js"></script>
+<script src="../data/female_faces.js"></script>
+<script>
+  const grid = document.getElementById('portraits');
+  const metadata = document.getElementById('metadata');
+  function render(gender) {
+    grid.replaceChildren();
+    metadata.replaceChildren();
+    const records = gender === 'male' ? window.MALE_FACE_ASSETS : window.FEMALE_FACE_ASSETS;
+    for (const record of records) {
+      const figure = document.createElement('figure');
+      const link = document.createElement('a');
+      link.href = '../' + record.image;
+      const image = document.createElement('img');
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.src = link.href;
+      image.alt = record.id + ' の肖像';
+      image.width = 1200;
+      image.height = 1600;
+      const caption = document.createElement('figcaption');
+      caption.textContent = record.id;
+      link.append(image);
+      figure.append(link, caption);
+      grid.append(figure);
+      const detail = document.createElement('section');
+      detail.className = 'detail';
+      const title = document.createElement('strong');
+      title.textContent = record.id + '：' + record.label;
+      const note = document.createElement('p');
+      note.textContent = record.visual_review?.notes || '';
+      const prompt = document.createElement('pre');
+      prompt.textContent = record.prompt;
+      detail.append(title, note, prompt);
+      metadata.append(detail);
+    }
+  }
+  render('male');
+  document.getElementById('gender').addEventListener('change', event => render(event.target.value));
+  document.getElementById('full').addEventListener('change', event => grid.classList.toggle('full', event.target.checked));
+</script>
+</html>
