@@ -46,6 +46,7 @@
       margin: 0 auto;
       padding: 20px clamp(16px, 4vw, 36px) 32px;
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
       align-content: center;
       gap: 18px;
     }
@@ -345,6 +346,30 @@
       font-weight: 700;
     }
 
+    .ad-placement {
+      /* 狭いスマートフォンでも幅320pxの広告が画面内に収まるようにする。 */
+      width: min(100vw, 360px);
+      min-width: 0;
+      justify-self: center;
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    .ad-label {
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .ad-slot {
+      /* バナー分の高さを確保し、縦長の広告は切り取らずに枠を広げる。 */
+      min-height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
     .content-notes {
       display: grid;
       gap: 18px;
@@ -506,6 +531,17 @@
         </div>
       </div>
     </section>
+
+    <!-- 全画面で共通の1枠を使い、回答や画面切り替えでタグを再実行しない。 -->
+    <aside class="ad-placement" aria-label="広告">
+      <p class="ad-label" aria-hidden="true">広告</p>
+      <div class="ad-slot">
+        <div id="im-9b64d30372774652a33372f669d0b8bf">
+          <script async src="https://imp-adedge.i-mobile.co.jp/script/v1/spot.js?20220104"></script>
+          <script>(window.adsbyimobile=window.adsbyimobile||[]).push({pid:85394,mid:596057,asid:1943441,type:"banner",display:"inline",elementid:"im-9b64d30372774652a33372f669d0b8bf"})</script>
+        </div>
+      </div>
+    </aside>
 
     <section class="content-notes" aria-labelledby="about-diagnosis-title">
       <h2 id="about-diagnosis-title">この診断について</h2>
