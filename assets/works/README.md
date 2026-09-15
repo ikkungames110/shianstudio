@@ -2,7 +2,7 @@
 
 2026-09-12 に各プロジェクトの既存ローカルビルドを Chromium で表示して撮影したスクリーンショットです。
 
-- `type-checker.jpg`: `type_checker/dist/top/` のメインビジュアル。
+- `type-checker.png`: `type_checker/assets/promo/` の診断紹介ビジュアル。
 - `tetcla.jpg`: `tetris/dist/` で実際にブロックを操作したプレイ画面。
 - `majan.jpg`: `majan/dist/` のロビー画面（サイト内の表示サンプル）。
 
