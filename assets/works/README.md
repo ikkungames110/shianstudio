@@ -7,3 +7,8 @@
 - `majan.jpg`: `majan/dist/` のロビー画面（サイト内の表示サンプル）。
 
 公開先は `index.html` の各作品リンクを参照してください。画像は公開サイトに直接アクセスして撮影したものではありません。
+
+2026-10-14 追加分（公開サイトに Chromium で直接アクセスして撮影）:
+
+- `flowerlight.jpg`, `notebattle.jpg`, `sudoku.jpg`, `quarto.jpg`, `money-game.jpg`, `harmonia.jpg`, `darkweb.jpg`: 1440×1000 のトップ画面。
+- `timebomb.jpg`, `sanrentan.jpg`: スマホ幅（390px）のトップ画面。
