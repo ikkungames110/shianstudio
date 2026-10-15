@@ -12,3 +12,7 @@
 
 - `flowerlight.jpg`, `notebattle.jpg`, `sudoku.jpg`, `quarto.jpg`, `money-game.jpg`, `harmonia.jpg`, `darkweb.jpg`: 1440×1000 のトップ画面。
 - `timebomb.jpg`, `sanrentan.jpg`: スマホ幅（390px）のトップ画面。
+
+2026-10-15 追加分（公開サイトに Chromium で直接アクセスして撮影）:
+
+- `pattiwork.jpg`: 1440×1000 の P2P 対戦中の画面（ゲスト側）。
