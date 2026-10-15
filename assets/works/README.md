@@ -10,7 +10,7 @@
 
 2026-10-14 追加分（公開サイトに Chromium で直接アクセスして撮影）:
 
-- `flowerlight.jpg`, `notebattle.jpg`, `sudoku.jpg`, `quarto.jpg`, `money-game.jpg`, `harmonia.jpg`, `darkweb.jpg`: 1440×1000 のトップ画面。
+- `quarto.jpg`, `money-game.jpg`, `harmonia.jpg`: 1440×1000 のトップ画面。
 - `timebomb.jpg`, `sanrentan.jpg`: スマホ幅（390px）のトップ画面。
 
 2026-10-15 追加分（公開サイトに Chromium で直接アクセスして撮影）:
